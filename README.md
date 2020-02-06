@@ -68,6 +68,9 @@ You should now implement some way to control a single elevator, as a part of the
 
 Since you don't have any way to distribute requests yet, you should use the button presses directly. This will have to change later, so keep code quality in mind.
 
+### Approval
+
+Demonstrate your ability to call the elevator to a floor by pressing the corresponding button on the elevator control panel.
 
 
 
