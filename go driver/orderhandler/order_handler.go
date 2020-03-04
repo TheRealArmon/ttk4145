@@ -1,17 +1,20 @@
 package orderhandler
 
-import "./../elevio"
-import "time"
+import (
+	"time"
+
+	"./../elevio"
+)
+
 //import "fmt"
 //import "net"
 
 type OrderType struct {
-	Floor  int
+	Floor int
 	//Button ButtonType
 }
 
 var _numFloors int = 4
-
 
 /*func handle_order(event elevio.ButtonEvent, floor int){
   _mtx.Lock()
@@ -33,19 +36,18 @@ func stop_elev(event elevio.ButtonEvent, floor int){
   }
 }*/
 
-
 func CheckFloorOrder(reciever chan<- OrderType) {
-		prev := make([][3]bool, _numFloors)
-		for {
-			time.Sleep(20 * time.Millisecond)
-			for f := 0; f < _numFloors; f++ {
-				for b := elevio.ButtonType(0); b < 3; b++ {
-					v := elevio.GetButton(b, f)
-					if v != prev[f][b] && v != false{
-						reciever <- OrderType{f}
-					}
-					prev[f][b] = v
+	prev := make([][3]bool, _numFloors)
+	for {
+		time.Sleep(20 * time.Millisecond)
+		for f := 0; f < _numFloors; f++ {
+			for b := elevio.ButtonType(0); b < 3; b++ {
+				v := elevio.GetButton(b, f)
+				if v != prev[f][b] && v != false {
+					reciever <- OrderType{f}
 				}
+				prev[f][b] = v
 			}
 		}
+	}
 }
