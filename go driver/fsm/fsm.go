@@ -3,6 +3,7 @@ package fsm
 import "../elevio"
 import "../config"
 import "../timer"
+import "../orderhandler"
 import "fmt"
 
 var _currentDirection elevio.MotorDirection
@@ -13,16 +14,16 @@ var _order_type elevio.ButtonType
 var _orderQueue [config.NumFloors][config.NumBtns] bool
 
 
-func initState() {
-  _destination = config.StartFloor
-  _currentDirection = elevio.MD_Down
-  elevio.SetMotorDirection(elevio.MD_Down)
+func initState(elevator config.ElevatorState) {
   for i := 0; i < config.NumFloors; i++{
-    for j := 0; j < config.NumBtns; j++{
-      _orderQueue[i][j] = false
+    for j := elevio.BT_HallUp; j < config.NumBtns; j++{
+      elevio.SetButtonLamp(j, i, false)
+      elevator.Queue[i][j] = false
     }
   }
-  _orderQueue[0][0] = true
+  elevio.SetMotorDirection(elevio.MD_Down)
+  elevator.ElevState = config.Init
+  fmt.Println(elevator.ElevState)
 }
 
 func reachedFloor(sender <-chan bool) {
@@ -49,30 +50,34 @@ func checkReachedEdges() {
   }
 }
 
+
+
 func ElevStateMachine(ch config.FSMChannels) {
-
-
-  initState()
-
   elevator := config.ElevatorState{
     ID: 1,
     ElevState: config.Idle,
     Floor:     config.StartFloor,
     Dir:       config.Stop,
-    Queue:     _orderQueue,
+    Queue:     [config.NumFloors][config.NumBtns]bool{},
   }
 
+    initState(elevator)
+  fmt.Println(elevator.ElevState)  
   for {
       select {
       case newOrder := <- ch.NewOrderToHandle:
           order_floor := newOrder.Floor
           button_type := newOrder.Button
           elevator.Queue[order_floor][button_type] = true
-          elevator.Dir = FindDirection(elevator)
-          fmt.Println("+%v", elevator.Dir)
-          fmt.Println("+%v", elevator.Floor)
+          elevator.Dir = orderhandler.FindDirection(elevator)
 
       case a := <- ch.Drv_floors:
+        fmt.Println("+%v", elevator.ElevState)
+        switch elevator.ElevState {
+        case config.Init:
+          elevio.SetMotorDirection(elevio.MD_Stop)
+          elevator.ElevState = config.Idle
+        }
           _current_floor = a
           elevio.SetFloorIndicator(_current_floor)
           for i := 0; i<3; i++{
@@ -85,8 +90,4 @@ func ElevStateMachine(ch config.FSMChannels) {
           checkReachedEdges()
       }
   }
-}
-
-func handleOrders(){
-
 }

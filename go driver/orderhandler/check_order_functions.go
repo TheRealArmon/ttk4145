@@ -1,34 +1,34 @@
-package fsm
+package orderhandler
 
-import "../elevio"
+
 import "../config"
 
-func FindDirection(elevator config.ElevatorState) elevio.MotorDirection {
+func FindDirection(elevator config.ElevatorState) config.Directions{
   switch elevator.Dir {
   case config.Stop:
     if checkOrdersAbove(elevator){
-      return elevio.MD_Up
+      return config.MovingUp
     }
     if checkOrdersBelow(elevator){
-      return elevio.MD_Down
-    }
+      return config.MovingDown
+    }else{return config.Stop}
   case config.MovingUp:
     if checkOrdersAbove(elevator){
-      return elevio.MD_Up
+      return config.MovingUp
       }
     if checkOrdersBelow(elevator){
-      return elevio.MD_Down
-    }
+      return config.MovingDown
+    } else{return config.Stop}
   case config.MovingDown:
     if checkOrdersBelow(elevator){
-      return elevio.MD_Down
+      return config.MovingDown
     }
     if checkOrdersAbove(elevator){
-      return elevio.MD_Up
-    }
+      return config.MovingUp
+    } else {return config.Stop}
 
   }
-  return elevio.MD_Stop
+  return config.Stop
 }
 
 func checkOrdersAbove(elevator config.ElevatorState) bool{

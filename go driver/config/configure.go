@@ -13,6 +13,7 @@ type State int
 const(
   Idle State = iota
   Moving
+  Init
 )
 
 type Directions int
