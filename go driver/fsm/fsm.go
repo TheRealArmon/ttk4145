@@ -13,7 +13,7 @@ var _order_type elevio.ButtonType
 var _orderQueue [config.NumFloors][config.NumBtns] bool
 //lag funksjon for å åpne dør når en ankommer en etasje/trykker på knapp i samme etasje
 //lag et internt køsystem
-//lag initfunksjon som sender heisen til første etasje
+//lag initfunksjon som sender heisen til første etasj
 
 
 
