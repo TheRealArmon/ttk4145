@@ -3,7 +3,7 @@ package fsm
 import "../elevio"
 import "../config"
 import "../timer"
-//import "fmt"
+import "fmt"
 
 var _currentDirection elevio.MotorDirection
 var _destination int
@@ -11,24 +11,7 @@ var _current_direction elevio.MotorDirection
 var _current_floor int
 var _order_type elevio.ButtonType
 var _orderQueue [config.NumFloors][config.NumBtns] bool
-//lag funksjon for å åpne dør når en ankommer en etasje/trykker på knapp i samme etasje
-//lag et internt køsystem
-//lag initfunksjon som sender heisen til første etasje
 
-
-
-func setDirection(order_type elevio.ButtonType) {
-    if _destination < _current_floor {
-      elevio.SetMotorDirection(elevio.MD_Down)
-      _current_direction = elevio.MD_Down
-      elevio.SetButtonLamp(order_type, _destination, true)
-    }
-    if _destination > _current_floor{
-      elevio.SetMotorDirection(elevio.MD_Up)
-      _current_direction = elevio.MD_Up
-      elevio.SetButtonLamp(order_type, _destination, true)
-     }
-}
 
 func initState() {
   _destination = config.StartFloor
@@ -71,22 +54,24 @@ func ElevStateMachine(ch config.FSMChannels) {
 
   initState()
 
-  // elevator := config.ElevatorState{
-  //   ID: 1,
-  //   ElevState: config.Idle,
-  //   Floor:     config.StartFloor,
-  //   Dir:       elevio.MD_Stop,
-  //   Queue:     _orderQueue,
-  // }
+  elevator := config.ElevatorState{
+    ID: 1,
+    ElevState: config.Idle,
+    Floor:     config.StartFloor,
+    Dir:       config.Stop,
+    Queue:     _orderQueue,
+  }
 
   for {
       select {
-      case a := <- ch.Drv_buttons:
-          _destination = a.Floor
-          _order_type = a.Button
+      case newOrder := <- ch.NewOrderToHandle:
+          order_floor := newOrder.Floor
+          button_type := newOrder.Button
+          elevator.Queue[order_floor][button_type] = true
+          elevator.Dir = FindDirection(elevator)
+          fmt.Println("+%v", elevator.Dir)
+          fmt.Println("+%v", elevator.Floor)
 
-            _orderQueue[_destination][_order_type] = true
-            setDirection(_order_type)
       case a := <- ch.Drv_floors:
           _current_floor = a
           elevio.SetFloorIndicator(_current_floor)
@@ -97,10 +82,6 @@ func ElevStateMachine(ch config.FSMChannels) {
               reachedFloor(ch.Close_door)
             }
           }
-          // if a == _destination || _current_floor == _destination{
-          //   go timer.SetDoorTimer(close_door)
-          //   reachedFloor(close_door)
-          // }
           checkReachedEdges()
       }
   }

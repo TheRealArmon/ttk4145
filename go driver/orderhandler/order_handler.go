@@ -1,53 +1,17 @@
 package orderhandler
 
-import (
-	"time"
+import "../elevio"
+import "../config"
 
-	"./../elevio"
-)
-
-//import "fmt"
-//import "net"
-
-type OrderType struct {
-	Floor int
-	//Button ButtonType
-}
-
-var _numFloors int = 4
-
-/*func handle_order(event elevio.ButtonEvent, floor int){
-  _mtx.Lock()
-	defer _mtx.Unlock()
-  if event.Floor < floor {
-    elevio.SetMotorDirection(elevio.MD_Down)
-  }
-  if event.Floor > floor{
-    elevio.SetMotorDirection(elevio.MD_Up)
-  }
-}
-
-func stop_elev(event elevio.ButtonEvent, floor int){
-  _mtx.Lock()
-	defer _mtx.Unlock()
-  if (event.Floor == floor){
-    fmt.Printf("nå stopper heisen ikke")
-    elevio.SetMotorDirection(elevio.MD_Stop)
-  }
-}*/
-
-func CheckFloorOrder(reciever chan<- OrderType) {
-	prev := make([][3]bool, _numFloors)
-	for {
-		time.Sleep(20 * time.Millisecond)
-		for f := 0; f < _numFloors; f++ {
-			for b := elevio.ButtonType(0); b < 3; b++ {
-				v := elevio.GetButton(b, f)
-				if v != prev[f][b] && v != false {
-					reciever <- OrderType{f}
-				}
-				prev[f][b] = v
-			}
+func CheckNewOrder(reciever chan<- config.ElevOrder, sender <-chan elevio.ButtonEvent, id int){
+	for{
+		select{
+		case a := <- sender:
+			order_floor := a.Floor
+			button_type := a.Button
+			executingElevator := id
+			isDone := false;
+			reciever <- config.ElevOrder{order_floor, button_type, executingElevator, isDone}
 		}
 	}
 }
