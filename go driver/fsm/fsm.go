@@ -13,7 +13,7 @@ var _order_type elevio.ButtonType
 var _orderQueue [config.NumFloors][config.NumBtns] bool
 //lag funksjon for å åpne dør når en ankommer en etasje/trykker på knapp i samme etasje
 //lag et internt køsystem
-//lag initfunksjon som sender heisen til første etasj
+//lag initfunksjon som sender heisen til første etasje
 
 
 
@@ -66,41 +66,35 @@ func checkReachedEdges() {
   }
 }
 
-func ElevStateMachine() {
-  drv_buttons := make(chan elevio.ButtonEvent)
-  drv_floors  := make(chan int)
-  drv_obstr   := make(chan bool)
-  drv_stop    := make(chan bool)
-  close_door  := make(chan bool)
+func ElevStateMachine(ch config.FSMChannels) {
 
-  go elevio.PollButtons(drv_buttons)
-  go elevio.PollFloorSensor(drv_floors)
-  go elevio.PollObstructionSwitch(drv_obstr)
-  go elevio.PollStopButton(drv_stop)
 
   initState()
 
+  // elevator := config.ElevatorState{
+  //   ID: 1,
+  //   ElevState: config.Idle,
+  //   Floor:     config.StartFloor,
+  //   Dir:       elevio.MD_Stop,
+  //   Queue:     _orderQueue,
+  // }
+
   for {
       select {
-      case a := <- drv_buttons:
+      case a := <- ch.Drv_buttons:
           _destination = a.Floor
           _order_type = a.Button
-          if _destination == _current_floor{
-            go timer.SetDoorTimer(close_door)
-            reachedFloor(close_door)
-          } else {
+
             _orderQueue[_destination][_order_type] = true
             setDirection(_order_type)
-          }
-
-      case a := <- drv_floors:
+      case a := <- ch.Drv_floors:
           _current_floor = a
           elevio.SetFloorIndicator(_current_floor)
           for i := 0; i<3; i++{
             if (_orderQueue[_current_floor][i] == true){
               _orderQueue[_current_floor][i] = false
-              go timer.SetDoorTimer(close_door)
-              reachedFloor(close_door)
+              go timer.SetDoorTimer(ch.Close_door)
+              reachedFloor(ch.Close_door)
             }
           }
           // if a == _destination || _current_floor == _destination{
