@@ -11,9 +11,9 @@ const (
 type State int
 
 const(
-  Idle State = 0
-  Moving     = 1
-  Init       = 2
+  Idle State      = 0
+  Moving          = 1
+  ArrivedAtFloor  = 2
 )
 
 type Directions int

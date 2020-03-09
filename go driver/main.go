@@ -3,15 +3,16 @@ package main
 import "./elevio"
 import "./fsm"
 import "./config"
-//import "./orderhandler"
+import "./orderhandler"
 
 
 
 
 func main(){
     elevio.Init("localhost:15657", config.NumFloors)
-    
+
     fsmChannels := config.FSMChannels{
+      NewOrderToHandle: make(chan config.ElevatorOrder),
       Drv_buttons: make(chan elevio.ButtonEvent),
       Drv_floors: make(chan int),
       Drv_stop: make(chan bool),
@@ -21,6 +22,7 @@ func main(){
     go elevio.PollButtons(fsmChannels.Drv_buttons)
     go elevio.PollFloorSensor(fsmChannels.Drv_floors)
     go elevio.PollStopButton(fsmChannels.Drv_stop)
+    go orderhandler.CheckNewOrder(fsmChannels.NewOrderToHandle, fsmChannels.Drv_buttons, 1)
 
     fsm.ElevStateMachine(fsmChannels)
 
