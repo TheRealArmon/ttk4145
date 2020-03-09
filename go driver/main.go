@@ -10,6 +10,7 @@ import "./config"
 
 func main(){
     elevio.Init("localhost:15657", config.NumFloors)
+    
     fsmChannels := config.FSMChannels{
       Drv_buttons: make(chan elevio.ButtonEvent),
       Drv_floors: make(chan int),

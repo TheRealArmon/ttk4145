@@ -2,8 +2,8 @@ package timer
 
 import "time"
 
-func SetDoorTimer(reciever chan<- bool) {
-  ticker := time.NewTicker(3000 * time.Millisecond)
+func SetTimer(reciever chan<- bool, seconds time.Duration) {
+  ticker := time.NewTicker(seconds * 1000 * time.Millisecond)
   for {
     select {
     case <- ticker.C:

@@ -53,6 +53,7 @@ func checkReachedEdges() {
 
 
 func ElevStateMachine(ch config.FSMChannels) {
+  
   elevator := config.ElevatorState{
     ID: 1,
     ElevState: config.Idle,
@@ -83,7 +84,7 @@ func ElevStateMachine(ch config.FSMChannels) {
           for i := 0; i<3; i++{
             if (_orderQueue[_current_floor][i] == true){
               _orderQueue[_current_floor][i] = false
-              go timer.SetDoorTimer(ch.Close_door)
+              go timer.SetTimer(ch.Close_door, 3)
               reachedFloor(ch.Close_door)
             }
           }

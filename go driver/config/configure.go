@@ -11,38 +11,38 @@ const (
 type State int
 
 const(
-  Idle State = iota
-  Moving
-  Init
+  Idle State = 0
+  Moving     = 1
+  Init       = 2
 )
 
 type Directions int
 
 const(
-  MovingDown Directions = iota - 1
-  Stop
-  MovingUp
+  MovingDown Directions = -1
+  Stop                  = 0
+  MovingUp              = 1
 )
 
 type ElevatorState struct{
   ID                          int
-  ElevState                   State
   Floor                       int
   Dir                         Directions
+  ElevState                   State
   Queue [NumFloors][NumBtns]  bool
 }
 
 type FSMChannels struct {
-  NewOrderToHandle chan ElevOrder
+  NewOrderToHandle chan ElevatorOrder
   Drv_buttons chan elevio.ButtonEvent
   Drv_floors       chan int
   Drv_stop         chan bool
   Close_door       chan bool
 }
 
-type ElevOrder struct{
-  Floor               int
+type ElevatorOrder struct{
   Button              elevio.ButtonType
+  Floor               int
   ExecutingElevator   int
-  IsDone              bool
+  OrderDone           bool
 }

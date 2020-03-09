@@ -1,5 +1,4 @@
 package orderhandler
-// package orderhandler
 //
 // func costCalculator(order ElevOrder, elevs [NumElevators]ElevatorState, elevs_online [NumElevators]bool) int {
 // 	if order.Button == ButtonUp {
@@ -18,24 +17,24 @@ package orderhandler
 // 			return bestElevator
 // 		}
 // 		if cost > 0 && elevs[i].Dir == MD_UP {
-// 			cost++
+// 			cost = cost
 // 		}
 // 		if cost < 0 && elevs[i].Dir == MD_Down {
 // 			//burde det ikke være cost--, for så å endre tegn helt til slutt?
-// 			cost++
+// 			cost = cost
 // 		}
 // 		if cost > 0 && elevs[i].Dir == MD_Down {
-// 			cost = cost + 3
+// 			cost = cost + 2
 // 		}
 // 		if cost < 0 && elevs[i].Dir == MD_Up {
 // 			//burde det ikke være cost = cost -3, -||-
-// 			cost = cost + 3
-// 		}
-// 		if elevs[i].Dir == MD_Stop {
 // 			cost = cost + 2
 // 		}
+// 		if elevs[i].Dir == MD_Stop {
+// 			cost = cost + 1
+// 		}
 // 		if cost == 0 && elevs[i].Dir != MD_Stop {
-// 			cost = cost + 4
+// 			cost = cost + 3
 // 		}
 // 		//burde det ikke være en if(cost<0){cost = -cost} her?
 // 		if cost < minCost {
