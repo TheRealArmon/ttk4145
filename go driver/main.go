@@ -16,7 +16,7 @@ func main(){
       Drv_buttons: make(chan elevio.ButtonEvent),
       Drv_floors: make(chan int),
       Drv_stop: make(chan bool),
-      Close_door: make(chan bool),
+      Open_door: make(chan bool),
     }
 
     go elevio.PollButtons(fsmChannels.Drv_buttons)

@@ -2,7 +2,6 @@ package orderhandler
 
 import "../elevio"
 import "../config"
-import "fmt"
 
 func CheckNewOrder(reciever chan<- config.ElevatorOrder, sender <-chan elevio.ButtonEvent, id int){
 	for{
@@ -24,8 +23,8 @@ func AddOrdersToQueue(sender <-chan config.ElevatorOrder, elevator *config.Eleva
 		case newOrder := <- sender:
 			order_type := newOrder.Button
 			order_floor := newOrder.Floor
+			elevio.SetButtonLamp(order_type, order_floor, true)
 			elevator.Queue[order_floor][order_type] = true
-			fmt.Println("+%v", order_floor)
 		}
 	}
 }

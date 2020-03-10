@@ -37,7 +37,7 @@ type FSMChannels struct {
   Drv_buttons chan elevio.ButtonEvent
   Drv_floors       chan int
   Drv_stop         chan bool
-  Close_door       chan bool
+  Open_door       chan bool
 }
 
 type ElevatorOrder struct{
