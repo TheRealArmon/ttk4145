@@ -41,6 +41,7 @@ func main(){
     }
 
     newOrder := make(chan config.ElevatorOrder)
+    newState := make(chan config.ElevatorState)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -66,6 +67,6 @@ func main(){
     go networkmod.SendData(id, networkChannels, newOrder)
     go networkmod.RecieveData(id, networkChannels)
     go orderhandler.OrderHandler(elevatorMap)
-    fsm.ElevStateMachine(fsmChannels, newOrder, id, elevatorMap)
+    fsm.ElevStateMachine(fsmChannels, newOrder, newState, id, elevatorMap)
 
 }
