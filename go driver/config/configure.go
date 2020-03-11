@@ -34,7 +34,6 @@ type ElevatorState struct{
 }
 
 type FSMChannels struct {
-  NewOrderToHandle chan ElevatorOrder
   Drv_buttons chan elevio.ButtonEvent
   Drv_floors       chan int
   Drv_stop         chan bool
@@ -46,13 +45,13 @@ type FSMChannels struct {
 type NetworkChannels struct {
     PeerTxEnable    chan bool
     PeerUpdateCh    chan peers.PeerUpdate
-    TransmitterCh   chan ElevatorState
-    RecieveCh       chan ElevatorState
+    TransmitterCh   chan ElevatorOrder
+    RecieveCh       chan ElevatorOrder
 }
 
 type ElevatorOrder struct{
   Button              elevio.ButtonType
   Floor               int
-  ExecutingElevator   int
+  ExecutingElevator   string
   OrderDone           bool
 }

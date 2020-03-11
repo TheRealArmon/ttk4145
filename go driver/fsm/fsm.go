@@ -34,7 +34,7 @@ func reachedFloor(sender <-chan bool, elevator *config.ElevatorState) {
 
 
 
-func ElevStateMachine(ch config.FSMChannels, id string) {
+func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder, id string) {
 
   elevator := config.ElevatorState{
     ID: id,
@@ -42,7 +42,7 @@ func ElevStateMachine(ch config.FSMChannels, id string) {
     ElevState: config.Idle,
     Queue:     [config.NumFloors][config.NumBtns]bool{},
   }
-  go orderhandler.AddOrdersToQueue(ch.NewOrderToHandle, &elevator)
+  go orderhandler.AddOrdersToQueue(newOrder, &elevator)
   initState(&elevator)
 
   //Stop elevator in the first floor that the elevators arrive in

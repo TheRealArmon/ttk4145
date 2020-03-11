@@ -3,7 +3,7 @@ package orderhandler
 import "../elevio"
 import "../config"
 
-func CheckNewOrder(reciever chan<- config.ElevatorOrder, sender <-chan elevio.ButtonEvent, id int){
+func CheckNewOrder(reciever chan<- config.ElevatorOrder, sender <-chan elevio.ButtonEvent, id string){
 	for{
 		select{
 		case a := <- sender:

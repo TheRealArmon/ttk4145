@@ -2,7 +2,7 @@ package networkmod
 
 import (
 	"fmt"
-	"time"
+	//"time"
 	"../config"
 )
 
@@ -24,49 +24,14 @@ import (
 
 // sender <-chan config.ElevatorOrder
 
-func SendData(id string, ch config.NetworkChannels) {
-
-	// Our id can be anything. Here we pass it on the command line, using
-	//  `go run main.go -id=our_id`
-
-
-	// We make a channel for receiving updates on the id's of the peers that are
-	//  alive on the network
-	// peerUpdateCh := make(chan peers.PeerUpdate)
-	// We can disable/enable the transmitter after it has been started.
-	// This could be used to signal that we are somehow "unavailable".
-	// peerTxEnable := make(chan bool)
-	// go peers.Transmitter(12348, id, peerTxEnable)
-	// go peers.Receiver(12348, peerUpdateCh)
-
-	// We make channels for sending and receiving our custom data types
-
-
-	
-	// transmit_order := make(chan config.ElevatorOrder)
-	// recieve_order := make(chan config.ElevatorOrder)
-	
-	// ... and start the transmitter/receiver pair on some port
-	// These functions can take any number of channels! It is also possible to
-	//  start multiple transmitters/receivers on the same port.
-
-
-
-	
+func SendData(id string, ch config.NetworkChannels, newOrder chan config.ElevatorOrder) {
 	go func() {
-		a := [4][3] bool{
-			{false, false, false},
-			{false, false, false},
-			{false, false, false},
-			{false, false, false}}
-		helloMsg := config.ElevatorState{id, 1, 1, -1, a}
-		//helloMsg := ElevatorState{"hello from "+ id, 0,  a}
-		//helloMsg:={id, 0}
-
 		for {
-			//helloMsg.Iter++
-			ch.TransmitterCh <- helloMsg
-			time.Sleep(1 * time.Second)//må endre tid, sikkert sende meldinger mye oftere
+			select{
+			case msg := <- newOrder:
+				ch.TransmitterCh <- msg
+				//time.Sleep(1 * time.Second)//må endre tid, sikkert sende meldinger mye oftere
+			}
 		}
 	}()
 

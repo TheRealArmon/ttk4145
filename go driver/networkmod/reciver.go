@@ -52,8 +52,8 @@ func RecieveData(id string, ch config.NetworkChannels) {
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
 
-		case <-ch.RecieveCh:
-			//fmt.Printf("Received: %#v\n", a)
+		case a := <-ch.RecieveCh:
+			fmt.Printf("Received: %#v\n", a)
 		}
 	}
 }
