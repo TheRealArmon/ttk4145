@@ -29,6 +29,7 @@ func SendData(id string, ch config.NetworkChannels, newOrder chan config.Elevato
 		for {
 			select{
 			case msg := <- newOrder:
+				fmt.Println("SEnding msg")
 				ch.TransmitterCh <- msg
 				//time.Sleep(1 * time.Second)//må endre tid, sikkert sende meldinger mye oftere
 			}

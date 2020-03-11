@@ -1,6 +1,9 @@
 package config
 import "../elevio"
 import "../networkmod/network/peers"
+import "os"
+
+var LOCAL_ID = os.Args[1]
 
 const (
   NumFloors int = 4
@@ -26,7 +29,6 @@ const(
 )
 
 type ElevatorState struct{
-  ID                          string
   Floor                       int
   Dir                         Directions
   ElevState                   State
