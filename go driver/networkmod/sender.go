@@ -1,12 +1,9 @@
-package main
+package networkmod
 
 import (
 	"./network/bcast"
-	"./network/localip"
 	"./network/peers"
-	"flag"
 	"fmt"
-	"os"
 	"time"
 	"../config"
 )
@@ -26,35 +23,15 @@ import (
 
 // The example message. We just send one of these every second.
 
-func main() {
-	a := [4][3]bool{
-	{true, true, false},
-	{true, true, false},
-  {true, true, false},
-	{true, true, false}}
 
+// sender <-chan config.ElevatorOrder
+
+func SendData(id string) {
 
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
 
-	var id string
-	flag.StringVar(&id, "id", "", "id of this peer")
-	flag.Parse()
 
-	// ... or alternatively, we can use the local IP address.
-	// (But since we can run multiple programs on the same PC, we also append the
-	//  process ID)
-	if id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
-		}
-
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-
-
-	}
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
 	peerUpdateCh := make(chan peers.PeerUpdate)
@@ -68,7 +45,10 @@ func main() {
 
 	transmitt:= make(chan config.ElevatorState)
 	recieve := make(chan config.ElevatorState)
-
+	
+	// transmit_order := make(chan config.ElevatorOrder)
+	// recieve_order := make(chan config.ElevatorOrder)
+	
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
@@ -76,11 +56,13 @@ func main() {
 
 	go bcast.Transmitter(16569, transmitt)
 	go bcast.Receiver(16569, recieve)
-
-
-
-
+	
 	go func() {
+		a := [4][3] bool{
+			{false, false, false},
+			{false, false, false},
+			{false, false, false},
+			{false, false, false}}
 		helloMsg := config.ElevatorState{id, 1, 1, -1, a}
 		//helloMsg := ElevatorState{"hello from "+ id, 0,  a}
 		//helloMsg:={id, 0}

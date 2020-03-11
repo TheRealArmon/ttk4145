@@ -6,6 +6,7 @@ import "../timer"
 import "../orderhandler"
 
 
+
 func initState(elevator *config.ElevatorState) {
   elevio.SetDoorOpenLamp(false)
   for i := 0; i < config.NumFloors; i++{
@@ -33,10 +34,10 @@ func reachedFloor(sender <-chan bool, elevator *config.ElevatorState) {
 
 
 
-func ElevStateMachine(ch config.FSMChannels) {
+func ElevStateMachine(ch config.FSMChannels, id string) {
 
   elevator := config.ElevatorState{
-    ID: 1,
+    ID: id,
     Dir:       config.Stop,
     ElevState: config.Idle,
     Queue:     [config.NumFloors][config.NumBtns]bool{},

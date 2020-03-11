@@ -1,12 +1,9 @@
-package main
+package networkmod
 
 import (
 	"./network/bcast"
-	"./network/localip"
 	"./network/peers"
-	"flag"
 	"fmt"
-	"os"
 	"../config"
 	//"time"
 )
@@ -17,26 +14,9 @@ import (
 
 
 
-func main() {
+func RecieveData(id string) {
 	// Our id can be anything. Here we pass it on the command line, using
 	//  `go run main.go -id=our_id`
-	var id string
-	flag.StringVar(&id, "id", "", "id of this peer")
-	flag.Parse()
-
-	// ... or alternatively, we can use the local IP address.
-	// (But since we can run multiple programs on the same PC, we also append the
-	//  process ID)
-	if id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
-		}
-
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-
-	}
 
 	// We make a channel for receiving updates on the id's of the peers that are
 	//  alive on the network
@@ -55,8 +35,8 @@ func main() {
 	// ... and start the transmitter/receiver pair on some port
 	// These functions can take any number of channels! It is also possible to
 	//  start multiple transmitters/receivers on the same port.
-	go bcast.Transmitter(16569, transmitt)
-	go bcast.Receiver(16569, recieve)
+	go bcast.Transmitter(16568, transmitt)
+	go bcast.Receiver(16568, recieve)
 
 
 
