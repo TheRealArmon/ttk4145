@@ -6,13 +6,15 @@ import "./config"
 import "./orderhandler"
 import "./networkmod"
 import "./networkmod/network/localip"
+import "./networkmod/network/peers"
+import "./networkmod/network/bcaste"
 import "flag"
 import "os"
 import "fmt"
-
+e
 
 func main(){
-    elevio.Init("localhost:15657", config.NumFloors)
+    elevio.Init("localhost:12345", config.NumFloors)
     
     var id string
     flag.StringVar(&id, "id", "", "id of this peer")
@@ -40,13 +42,25 @@ func main(){
       Open_door: make(chan bool),
     }
     
+    networkChannels := config.NetworkChannels{
+      PeerTxEnable: make(chan bool),
+      PeerUpdateCh: make(chan peers.PeerUpdate),
+      TransmitterCh: make(chan config.ElevatorState),
+      RecieveCh: make(chan config.ElevatorState),
+    }
+    
+    go peers.Transmitter(12346, id, networkChannels.PeerTxEnable)
+    go peers.Receiver(12346, networkChannels.PeerUpdateCh)
+    go bcast.Transmitter(12347, networkChannels.TransmitterCh)
+    go bcast.Receiver(12347, networkChannels.RecieveCh)
+    
     go elevio.PollButtons(fsmChannels.Drv_buttons)
     go elevio.PollFloorSensor(fsmChannels.Drv_floors)
     go elevio.PollStopButton(fsmChannels.Drv_stop)
     go orderhandler.CheckNewOrder(fsmChannels.NewOrderToHandle, fsmChannels.Drv_buttons, 1)
     
-    go networkmod.SendData(id)
-    go networkmod.RecieveData(id)
+    go networkmod.SendData(id, networkChannels)
+    //go networkmod.RecieveData(id)
     fsm.ElevStateMachine(fsmChannels, id)
 
 }

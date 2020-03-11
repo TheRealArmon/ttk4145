@@ -1,5 +1,6 @@
 package config
 import "../elevio"
+import "../networkmod/network/peers"
 
 const (
   NumFloors int = 4
@@ -38,6 +39,15 @@ type FSMChannels struct {
   Drv_floors       chan int
   Drv_stop         chan bool
   Open_door       chan bool
+}
+
+
+
+type NetworkChannels struct {
+    PeerTxEnable    chan bool
+    PeerUpdateCh    chan peers.PeerUpdate
+    TransmitterCh   chan ElevatorState
+    RecieveCh       chan ElevatorState
 }
 
 type ElevatorOrder struct{
