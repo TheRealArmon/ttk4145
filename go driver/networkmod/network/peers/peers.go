@@ -10,7 +10,7 @@ import (
 
 type PeerUpdate struct {
 	Peers []string
-	New   string
+	New   []string
 	Lost  []string
 }
 
@@ -51,10 +51,10 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 		id := string(buf[:n])
 
 		// Adding new connection
-		p.New = ""
+		p.New = make([]string,0)
 		if id != "" {
 			if _, idExists := lastSeen[id]; !idExists {
-				p.New = id
+				p.New = append(p.New, id)
 				updated = true
 			}
 

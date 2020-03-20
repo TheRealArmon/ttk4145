@@ -3,6 +3,7 @@ package networkmod
 import (
 	"fmt"
 	"../config"
+	//"reflect"
 	//"time"
 )
 
@@ -12,7 +13,7 @@ import (
 
 
 
-func RecieveData(id string, ch config.NetworkChannels) {
+func RecieveData(id string, ch config.NetworkChannels, reciever chan<- string) {
 
 
 	fmt.Println("Started")
@@ -23,9 +24,10 @@ func RecieveData(id string, ch config.NetworkChannels) {
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
+			reciever <- p.New[0]
 
 
-		case a := <-ch.RecieveCh:
+		case a := <-ch.RecieveStateCh:
 			fmt.Printf("Received: %#v\n", a)
 		}
 	}

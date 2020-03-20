@@ -45,10 +45,12 @@ type FSMChannels struct {
 
 
 type NetworkChannels struct {
-    PeerTxEnable    chan bool
-    PeerUpdateCh    chan peers.PeerUpdate
-    TransmitterCh   chan ElevatorOrder
-    RecieveCh       chan ElevatorOrder
+    PeerTxEnable          chan bool
+    PeerUpdateCh          chan peers.PeerUpdate
+    TransmittOrderCh      chan ElevatorOrder
+    TransmittStateCh      chan ElevatorState
+    RecieveOrderCh        chan ElevatorOrder
+    RecieveStateCh        chan ElevatorState
 }
 
 type ElevatorOrder struct{
@@ -57,3 +59,7 @@ type ElevatorOrder struct{
   ExecutingElevator   string
   OrderDone           bool
 }
+
+type ElevatorMap map[string]ElevatorState
+
+

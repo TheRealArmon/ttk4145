@@ -1,12 +1,13 @@
 package orderhandler
 
 import "../config"
+import "../elevio"
 
-func CostCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, id string) string {
+func costCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, id string) string {
 	if button_type == elevio.BT_Cab {
 		return id
 	}
-	minCost := Inf(1)
+	minCost := 100
 	bestElevator := id
   cost := 0
 	for elevator := range elevatorMap{ //iterating through all elevators
@@ -43,6 +44,7 @@ func CostCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[st
 			minCost = cost
 			bestElevator = elevator
 		}
-		return bestElevator
+		
 	}
+	return bestElevator
 }

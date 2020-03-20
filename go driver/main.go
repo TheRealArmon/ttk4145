@@ -42,31 +42,38 @@ func main(){
 
     newOrder := make(chan config.ElevatorOrder)
     newState := make(chan config.ElevatorState)
+    newPeerOnNewtwork := make(chan string)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
       PeerUpdateCh: make(chan peers.PeerUpdate),
-      TransmitterCh: make(chan config.ElevatorOrder),
-      RecieveCh: make(chan config.ElevatorOrder),
+      TransmittOrderCh: make(chan config.ElevatorOrder),
+      TransmittStateCh: make(chan config.ElevatorState),
+      RecieveOrderCh: make(chan config.ElevatorOrder),
+      RecieveStateCh: make(chan config.ElevatorState),
     }
 
 
-    elevatorMap = make(map[string]config.ElevatorState)
+    var elevatorMap = make(map[string]config.ElevatorState)
+    var activeElevatorMap = make(map[string]bool)
 
     go peers.Transmitter(12346, id, networkChannels.PeerTxEnable)
     go peers.Receiver(12346, networkChannels.PeerUpdateCh)
-    go bcast.Transmitter(12347, networkChannels.TransmitterCh)
-    go bcast.Receiver(12347, networkChannels.RecieveCh)
+    go bcast.Transmitter(12347, networkChannels.TransmittOrderCh)
+    go bcast.Receiver(12347, networkChannels.RecieveOrderCh)
+    //go bcast.Transmitter(12348, networkChannels.TransmittStateCh)
+    //go bcast.Receiver(12348, networkChannels.RecieveStateCh)
 
     go elevio.PollButtons(fsmChannels.Drv_buttons)
     go elevio.PollFloorSensor(fsmChannels.Drv_floors)
     go elevio.PollStopButton(fsmChannels.Drv_stop)
-    go orderhandler.CheckNewOrder(newOrder, fsmChannels.Drv_buttons, id)
+    //go orderhandler.CheckNewOrder(newOrder, fsmChannels.Drv_buttons, id)
 
 
-    go networkmod.SendData(id, networkChannels, newOrder)
-    go networkmod.RecieveData(id, networkChannels)
-    go orderhandler.OrderHandler(elevatorMap)
-    fsm.ElevStateMachine(fsmChannels, newOrder, newState, id, elevatorMap)
+    go networkmod.SendData(id, networkChannels, newOrder, newState)
+    go networkmod.RecieveData(id, networkChannels, newPeerOnNewtwork)
+
+    go orderhandler.OrderHandler(elevatorMap, activeElevatorMap, fsmChannels.Drv_buttons, id)
+    fsm.ElevStateMachine(fsmChannels, newOrder, id, elevatorMap, newState)
 
 }
