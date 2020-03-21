@@ -37,7 +37,7 @@ func reachedFloor(sender <-chan bool, elevator *config.ElevatorState) {
 
 
 func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder, id string,
-   elevatorMap map[string]config.ElevatorState, reciever chan<- config.ElevatorState) {
+   elevatorMap map[string]config.ElevatorState, reciever chan<- map[string]config.ElevatorState) {
 
   elevator := config.ElevatorState{
     Dir:       config.Stop,
@@ -61,6 +61,7 @@ func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder,
   }
 
   elevatorMap[id] = elevator
+  reciever <- elevatorMap
  /* if reflect.TypeOf(elevatorMap) == config.ElevatorState{
       fmt.Println("Fuck yea")
   }*/
@@ -83,8 +84,6 @@ func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder,
         if orderhandler.CheckOrderSameFLoor(&elevator){
           elevator.ElevState = config.ArrivedAtFloor
         }
-        //reciever <- elevator
-        //time.Sleep(1 * time.Second)
 
     case config.Moving:
       select{

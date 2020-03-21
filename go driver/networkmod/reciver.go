@@ -13,7 +13,7 @@ import (
 
 
 
-func RecieveData(id string, ch config.NetworkChannels, reciever chan<- string) {
+func RecieveData(id string, ch config.NetworkChannels, reciever chan<- []string, recievedNewStateUpdateFromNetwork chan<- map[string]config.ElevatorState) {
 
 
 	fmt.Println("Started")
@@ -24,11 +24,11 @@ func RecieveData(id string, ch config.NetworkChannels, reciever chan<- string) {
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			reciever <- p.New[0]
+			reciever <- p.New
 
 
 		case a := <-ch.RecieveStateCh:
-			fmt.Printf("Received: %#v\n", a)
+			recievedNewStateUpdateFromNetwork <- a
 		}
 	}
 }

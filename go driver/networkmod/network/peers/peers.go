@@ -49,7 +49,6 @@ func Receiver(port int, peerUpdateCh chan<- PeerUpdate) {
 		n, _, _ := conn.ReadFrom(buf[0:])
 
 		id := string(buf[:n])
-
 		// Adding new connection
 		p.New = make([]string,0)
 		if id != "" {

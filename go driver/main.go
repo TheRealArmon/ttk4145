@@ -41,16 +41,17 @@ func main(){
     }
 
     newOrder := make(chan config.ElevatorOrder)
-    newState := make(chan config.ElevatorState)
-    newPeerOnNewtwork := make(chan string)
+    newState := make(chan map[string]config.ElevatorState)
+    newPeerOnNewtwork := make(chan []string)
+    recievedNewStateUpdateFromNetwork := make(chan map[string]config.ElevatorState)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
       PeerUpdateCh: make(chan peers.PeerUpdate),
       TransmittOrderCh: make(chan config.ElevatorOrder),
-      TransmittStateCh: make(chan config.ElevatorState),
+      TransmittStateCh: make(chan map[string]config.ElevatorState),
       RecieveOrderCh: make(chan config.ElevatorOrder),
-      RecieveStateCh: make(chan config.ElevatorState),
+      RecieveStateCh: make(chan map[string]config.ElevatorState),
     }
 
 
@@ -61,8 +62,8 @@ func main(){
     go peers.Receiver(12346, networkChannels.PeerUpdateCh)
     go bcast.Transmitter(12347, networkChannels.TransmittOrderCh)
     go bcast.Receiver(12347, networkChannels.RecieveOrderCh)
-    //go bcast.Transmitter(12348, networkChannels.TransmittStateCh)
-    //go bcast.Receiver(12348, networkChannels.RecieveStateCh)
+    go bcast.Transmitter(12348, networkChannels.TransmittStateCh)
+    go bcast.Receiver(12348, networkChannels.RecieveStateCh)
 
     go elevio.PollButtons(fsmChannels.Drv_buttons)
     go elevio.PollFloorSensor(fsmChannels.Drv_floors)
@@ -71,8 +72,10 @@ func main(){
 
 
     go networkmod.SendData(id, networkChannels, newOrder, newState)
-    go networkmod.RecieveData(id, networkChannels, newPeerOnNewtwork)
+    go networkmod.RecieveData(id, networkChannels, newPeerOnNewtwork, recievedNewStateUpdateFromNetwork)
 
+    go orderhandler.RecievedStateUpdateFromNetwork(recievedNewStateUpdateFromNetwork, elevatorMap)
+    go orderhandler.RecievePeer(newPeerOnNewtwork)
     go orderhandler.OrderHandler(elevatorMap, activeElevatorMap, fsmChannels.Drv_buttons, id)
     fsm.ElevStateMachine(fsmChannels, newOrder, id, elevatorMap, newState)
 

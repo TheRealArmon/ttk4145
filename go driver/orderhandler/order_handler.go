@@ -43,3 +43,27 @@ func OrderHandler(elevatorMap map[string]config.ElevatorState, activeElevators m
 		}
 
 }
+
+func RecievePeer(sender <-chan []string){
+	for{
+		select{
+		case  <- sender:
+
+		}
+	}
+}
+
+func RecievedStateUpdateFromNetwork(state <-chan map[string]config.ElevatorState, elevatorMap map[string]config.ElevatorState){
+	for{
+		select{
+		case newState := <- state:
+			for id, elevatorState := range newState{
+				if val, ok := elevatorMap[id]; ok {
+					fmt.Println(val)
+   					elevatorMap[id] = elevatorState	
+				}
+			}
+			fmt.Println(len(elevatorMap))
+		}
+	}
+}
