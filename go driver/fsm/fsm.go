@@ -35,17 +35,14 @@ func reachedFloor(sender <-chan bool, elevatorStatus *config.ElevatorState) {
   }
 }
 
-func updateElevatorMap(elevator config.ElevatorState, mutex *sync.RWMutex, id string, newState chan<- map[string]config.ElevatorState){
-  mutex.Lock()
+func updateElevatorMap(elevator config.ElevatorState, id string, newState chan<- []config.ElevatorState){
   config.ElevatorMap[id] = elevator
   var temp = config.ElevatorMap
   newState <- temp
-  mutex.Unlock()
   }
 
 
-func ElevStateMachine(ch config.FSMChannels, id string, newState chan<- map[string]config.ElevatorState,
-  mutex *sync.RWMutex) {
+func ElevStateMachine(ch config.FSMChannels, id string, newState chan<- []config.ElevatorState) {
 
 
   elevator := config.ElevatorState{
@@ -70,7 +67,7 @@ func ElevStateMachine(ch config.FSMChannels, id string, newState chan<- map[stri
   }
 
 
-  go updateElevatorMap(elevator, mutex, id, newState)
+  go updateElevatorList(elevator, id, newState)
 
   for {
     switch elevator.ElevState {

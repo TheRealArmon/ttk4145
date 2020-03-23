@@ -7,7 +7,7 @@ import (
 )
 
 
-func SendData(id string, ch config.NetworkChannels, newOrder chan config.ElevatorOrder, newState chan map[string]config.ElevatorState){
+func SendData(ch config.NetworkChannels, newOrder chan config.ElevatorOrder, newState chan list[]config.ElevatorState){
  	go func() {
 		for {
 			select{

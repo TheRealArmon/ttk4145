@@ -8,20 +8,14 @@ var LOCAL_ID = os.Args[1]
 
 const (
   NumFloors int = 4
-  StartFloor    = 2
   NumElevators  = 3
   NumBtns       = 3
 )
 
 
 
-var ElevatorMap = make(map[string]ElevatorState)
-var ActiveElevatorMap = make(map[string]bool)
-
-
-
- 
-
+var ElevatorList [NumElevators]ElevatorState
+var ActiveElevatorList [NumElevators]bool
 
 
 type State int
@@ -60,15 +54,15 @@ type NetworkChannels struct {
     PeerTxEnable          chan bool
     PeerUpdateCh          chan peers.PeerUpdate
     TransmittOrderCh      chan ElevatorOrder
-    TransmittStateCh      chan map[string]ElevatorState
+    TransmittStateCh      chan []ElevatorState
     RecieveOrderCh        chan ElevatorOrder
-    RecieveStateCh        chan map[string]ElevatorState
+    RecieveStateCh        chan []ElevatorState
 }
 
 type ElevatorOrder struct{
   Button              elevio.ButtonType
   Floor               int
-  ExecutingElevator   string
+  ExecutingElevator   int
   OrderStatus         bool
 }
 

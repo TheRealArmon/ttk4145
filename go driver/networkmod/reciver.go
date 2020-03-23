@@ -6,6 +6,7 @@ import (
 	//"reflect"
 	//"time"
 	"sync"
+	"strconv"
 )
 
 // We define some custom struct to send over the network.
@@ -14,7 +15,7 @@ import (
 
 
 
-func RecieveData(id string, ch config.NetworkChannels, mutex *sync.RWMutex) {
+func RecieveData(id string, ch config.NetworkChannels) {
 
 	fmt.Println("Started")
 	for {
@@ -28,9 +29,8 @@ func RecieveData(id string, ch config.NetworkChannels, mutex *sync.RWMutex) {
 			//If recievig from a new peer, upadate avtive elevator map
 			
 			for _, peer := range p.New{
-				mutex.Lock()
-				config.ActiveElevatorMap[peer] = true
-				mutex.Unlock()
+				peerId, _ := strconv.Atoi(peer)
+				config.ActiveElevatorList[peerId] = true
 			}
 			
 
@@ -38,30 +38,23 @@ func RecieveData(id string, ch config.NetworkChannels, mutex *sync.RWMutex) {
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0{
 				for _, peer := range p.Lost{
-					mutex.Lock()
-					config.ActiveElevatorMap[peer] = false
-					mutex.Unlock()
+					peerId, _ := strconv.Atoi(peer)
+					config.ActiveElevatorList[peer] = false
 				}
 			}
 			
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
-			mutex.Lock()
 			for id, elevatorState := range newState{
-				config.ElevatorMap[id] = elevatorState
+				config.ElevatorList[id] = elevatorState
 			}
-			mutex.Unlock()
-			
 
 		case newOrder := <-ch.RecieveOrderCh:
-			mutex.Lock()
 			id := newOrder.ExecutingElevator
-			var status = config.ElevatorMap[id]
+			var status = config.ElevatorList[id]
 			status.Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
-			config.ElevatorMap[id] = status
-			fmt.Println(config.ElevatorMap)
-			mutex.Unlock()
+			config.ElevatorList[id] = status
 		}
 
 	}

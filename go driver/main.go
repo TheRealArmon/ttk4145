@@ -12,6 +12,7 @@ import "os"
 import "fmt"
 import "flag"
 import "sync"
+import "strconv"
 
 func main(){
 
@@ -20,8 +21,6 @@ func main(){
     flag.StringVar(&Local_Host_Id, "hostId", "", "hostId of this peer")
     flag.IntVar(&id, "id", 1234, "id of this peer")
     flag.Parse()
-
-    fmt.Println("%v", Local_Id)
 
     elevio.Init("localhost:"+Local_Host_Id, config.NumFloors)
 
@@ -36,7 +35,6 @@ func main(){
     }
     id := fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())*/
 
-    var mutex = &sync.RWMutex{}
 
     fsmChannels := config.FSMChannels{
       Drv_buttons: make(chan elevio.ButtonEvent),
@@ -46,20 +44,20 @@ func main(){
     }
 
     newOrder := make(chan config.ElevatorOrder)
-    newState := make(chan map[string]config.ElevatorState)
+    newState := make(chan []config.ElevatorState)
 
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
       PeerUpdateCh: make(chan peers.PeerUpdate),
       TransmittOrderCh: make(chan config.ElevatorOrder),
-      TransmittStateCh: make(chan map[string]config.ElevatorState),
+      TransmittStateCh: make(chan []config.ElevatorState),
       RecieveOrderCh: make(chan config.ElevatorOrder),
-      RecieveStateCh: make(chan map[string]config.ElevatorState),
+      RecieveStateCh: make(chan []config.ElevatorState),
     }
 
 
-    go peers.Transmitter(12346, id, networkChannels.PeerTxEnable)
+    go peers.Transmitter(12346, strconv.Iota(id), networkChannels.PeerTxEnable)
     go peers.Receiver(12346, networkChannels.PeerUpdateCh)
     go bcast.Transmitter(12347, networkChannels.TransmittOrderCh)
     go bcast.Receiver(12347, networkChannels.RecieveOrderCh)
@@ -72,10 +70,10 @@ func main(){
     //go orderhandler.CheckNewOrder(newOrder, fsmChannels.Drv_buttons, id)
 
 
-    go networkmod.SendData(id, networkChannels, newOrder, newState)
-    go networkmod.RecieveData(id, networkChannels, mutex)
+    go networkmod.SendData(networkChannels, newOrder, newState)
+    go networkmod.RecieveData(id, networkChannels)
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id, mutex)
-    fsm.ElevStateMachine(fsmChannels, id, newState, mutex)
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id)
+    fsm.ElevStateMachine(fsmChannels, id, newState)
 
 }

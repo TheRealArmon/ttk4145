@@ -5,14 +5,13 @@ import "../elevio"
 //import "fmt"
 import "sync"
 
-func costCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, id string, mutex *sync.RWMutex) string {
+func costCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, id string) string {
 	if button_type == elevio.BT_Cab {
 		return id
 	}
 	minCost := 100
 	bestElevator := id
   	cost := 0
-  	mutex.Lock()
 	for elevator := range elevatorMap{ //iterating through all elevators
 		if !activeElevators[elevator] {
 			continue //if elevator offline, skip to next iteration
@@ -48,6 +47,5 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[st
 			bestElevator = elevator
 		}
 	}
-	mutex.Unlock()
 	return bestElevator
 }
