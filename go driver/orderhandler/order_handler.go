@@ -2,6 +2,7 @@ package orderhandler
 
 import "../elevio"
 import "../config"
+import "sync"
 //import "fmt"
  /*
  func CheckNewOrder(reciever chan<- config.ElevatorOrder, sender <-chan elevio.ButtonEvent, id string){
@@ -29,13 +30,13 @@ import "../config"
  	}
  } */
 
-func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, id string){
+func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, id string, mutex *sync.RWMutex){
 		for{
 			select{
 			case pressedButton := <- buttonCh:
 				button_type := pressedButton.Button
 				order_floor := pressedButton.Floor
-				best_elevator := costCalculator(order_floor, button_type, config.ElevatorMap, config.ActiveElevatorMap, id)
+				best_elevator := costCalculator(order_floor, button_type, config.ElevatorMap, config.ActiveElevatorMap, id, mutex)
 				isDone := false
 				sendOrder <- config.ElevatorOrder{button_type, order_floor, best_elevator, isDone}
 			}

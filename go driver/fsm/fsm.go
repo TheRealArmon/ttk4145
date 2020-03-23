@@ -4,8 +4,9 @@ import "../elevio"
 import "../config"
 import "../timer"
 import "../orderhandler"
+import "sync"
 //import "fmt"
-//import "time"
+import "time"
 //import "reflect"
 
 
@@ -20,12 +21,10 @@ func initState(elevator *config.ElevatorState) {
   elevio.SetMotorDirection(elevio.MD_Down)
 }
 
-func reachedFloor(sender <-chan bool, id string) {
+func reachedFloor(sender <-chan bool, elevatorStatus *config.ElevatorState) {
   elevio.SetMotorDirection(elevio.MD_Stop)
-  var status = config.ElevatorMap[id]
-  status.ElevState = config.Idle
-  status.Dir = config.Stop
-  config.ElevatorMap[id] = status
+  elevatorStatus.ElevState = config.Idle
+  elevatorStatus.Dir = config.Stop
   elevio.SetDoorOpenLamp(true)
   for {
     select{
@@ -36,9 +35,18 @@ func reachedFloor(sender <-chan bool, id string) {
   }
 }
 
+func updateElevatorMap(elevator config.ElevatorState, mutex *sync.RWMutex, id string, newState chan<- map[string]config.ElevatorState){
+  mutex.Lock()
+  config.ElevatorMap[id] = elevator
+  var temp = config.ElevatorMap
+  newState <- temp
+  mutex.Unlock()
+  }
 
 
-func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder, id string, reciever chan<- map[string]config.ElevatorState) {
+func ElevStateMachine(ch config.FSMChannels, id string, newState chan<- map[string]config.ElevatorState,
+  mutex *sync.RWMutex) {
+
 
   elevator := config.ElevatorState{
     Dir:       config.Stop,
@@ -61,13 +69,13 @@ func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder,
     break
   }
 
-  config.ElevatorMap[id] = elevator
-  reciever <- config.ElevatorMap
+
+  go updateElevatorMap(elevator, mutex, id, newState)
 
   for {
     switch elevator.ElevState {
     case config.Idle:
-        elevator.Dir = orderhandler.FindDirection(config.ElevatorMap[id])
+        elevator.Dir = orderhandler.FindDirection(&elevator)
         if elevator.Dir != config.Stop{
           if elevator.Dir == config.MovingUp{
             elevio.SetMotorDirection(elevio.MD_Up)
@@ -77,22 +85,29 @@ func ElevStateMachine(ch config.FSMChannels, newOrder chan config.ElevatorOrder,
           }
           elevator.ElevState = config.Moving
         }
-        if orderhandler.CheckOrderSameFLoor(config.ElevatorMap[id], id){
+        if orderhandler.CheckOrderSameFLoor(&elevator, id){
           elevator.ElevState = config.ArrivedAtFloor
         }
+        go updateElevatorMap(elevator, mutex, id, newState)
+        time.Sleep(10 * time.Millisecond)
 
     case config.Moving:
       select{
       case floor := <- ch.Drv_floors:
         elevio.SetFloorIndicator(floor)
         elevator.Floor = floor
-        if orderhandler.CheckIfArrived(floor, config.ElevatorMap[id], id){
+        if orderhandler.CheckIfArrived(floor, &elevator, id){
           elevator.ElevState = config.ArrivedAtFloor
         }
+        go updateElevatorMap(elevator, mutex, id, newState)
       }
+
     case config.ArrivedAtFloor:
       go timer.SetTimer(ch.Open_door, 3)
-      reachedFloor(ch.Open_door, id)
+      reachedFloor(ch.Open_door, &elevator)
+      go updateElevatorMap(elevator, mutex, id, newState)
     }
   }
 }
+
+

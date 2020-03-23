@@ -5,6 +5,7 @@ import (
 	"../config"
 	//"reflect"
 	//"time"
+	"sync"
 )
 
 // We define some custom struct to send over the network.
@@ -13,7 +14,7 @@ import (
 
 
 
-func RecieveData(id string, ch config.NetworkChannels) {
+func RecieveData(id string, ch config.NetworkChannels, mutex *sync.RWMutex) {
 
 	fmt.Println("Started")
 	for {
@@ -25,31 +26,42 @@ func RecieveData(id string, ch config.NetworkChannels) {
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			
 			//If recievig from a new peer, upadate avtive elevator map
-			 
+			
 			for _, peer := range p.New{
+				mutex.Lock()
 				config.ActiveElevatorMap[peer] = true
+				mutex.Unlock()
 			}
+			
+
 			
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0{
 				for _, peer := range p.Lost{
+					mutex.Lock()
 					config.ActiveElevatorMap[peer] = false
+					mutex.Unlock()
 				}
 			}
 			
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
+			mutex.Lock()
 			for id, elevatorState := range newState{
 				config.ElevatorMap[id] = elevatorState
 			}
+			mutex.Unlock()
 			
 
 		case newOrder := <-ch.RecieveOrderCh:
+			mutex.Lock()
 			id := newOrder.ExecutingElevator
 			var status = config.ElevatorMap[id]
 			status.Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
 			config.ElevatorMap[id] = status
+			fmt.Println(config.ElevatorMap)
+			mutex.Unlock()
 		}
 
 	}

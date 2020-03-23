@@ -11,27 +11,32 @@ import "./networkmod/network/bcast"
 import "os"
 import "fmt"
 import "flag"
-
+import "sync"
 
 func main(){
-    var Local_Id string
-    flag.StringVar(&Local_Id, "id", "", "Id of this peer")
+
+    var Local_Host_Id string
+    var id int
+    flag.StringVar(&Local_Host_Id, "hostId", "", "hostId of this peer")
+    flag.IntVar(&id, "id", 1234, "id of this peer")
     flag.Parse()
 
+    fmt.Println("%v", Local_Id)
 
-    elevio.Init("localhost:"+Local_Id, config.NumFloors)
+    elevio.Init("localhost:"+Local_Host_Id, config.NumFloors)
 
     // ... or alternatively, we can use the local IP address.
     // (But since we can run multiple programs on the same PC, we also append the
     //  process ID)
 
-    localIP, err := localip.LocalIP()
+    /*localIP, err := localip.LocalIP()
     if err != nil {
         fmt.Println(err)
         localIP = "DISCONNECTED"
     }
-    id := fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
+    id := fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())*/
 
+    var mutex = &sync.RWMutex{}
 
     fsmChannels := config.FSMChannels{
       Drv_buttons: make(chan elevio.ButtonEvent),
@@ -68,9 +73,9 @@ func main(){
 
 
     go networkmod.SendData(id, networkChannels, newOrder, newState)
-    go networkmod.RecieveData(id, networkChannels)
+    go networkmod.RecieveData(id, networkChannels, mutex)
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id)
-    fsm.ElevStateMachine(fsmChannels, newOrder, id, newState)
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id, mutex)
+    fsm.ElevStateMachine(fsmChannels, id, newState, mutex)
 
 }

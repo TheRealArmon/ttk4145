@@ -3,7 +3,6 @@ package config
 import "../elevio"
 import "../networkmod/network/peers"
 import "os"
-import "sync"
 
 var LOCAL_ID = os.Args[1]
 
@@ -18,7 +17,7 @@ const (
 
 var ElevatorMap = make(map[string]ElevatorState)
 var ActiveElevatorMap = make(map[string]bool)
-var mutex = &sync.Mutex{}
+
 
 
  
