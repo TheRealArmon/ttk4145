@@ -42,8 +42,7 @@ func main(){
 
     newOrder := make(chan config.ElevatorOrder)
     newState := make(chan map[string]config.ElevatorState)
-    newPeerOnNewtwork := make(chan []string)
-    recievedNewStateUpdateFromNetwork := make(chan map[string]config.ElevatorState)
+
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -54,9 +53,6 @@ func main(){
       RecieveStateCh: make(chan map[string]config.ElevatorState),
     }
 
-
-    var elevatorMap = make(map[string]config.ElevatorState)
-    var activeElevatorMap = make(map[string]bool)
 
     go peers.Transmitter(12346, id, networkChannels.PeerTxEnable)
     go peers.Receiver(12346, networkChannels.PeerUpdateCh)
@@ -72,11 +68,9 @@ func main(){
 
 
     go networkmod.SendData(id, networkChannels, newOrder, newState)
-    go networkmod.RecieveData(id, networkChannels, newPeerOnNewtwork, recievedNewStateUpdateFromNetwork)
+    go networkmod.RecieveData(id, networkChannels)
 
-    go orderhandler.RecievedStateUpdateFromNetwork(recievedNewStateUpdateFromNetwork, elevatorMap)
-    go orderhandler.RecievePeer(newPeerOnNewtwork)
-    go orderhandler.OrderHandler(elevatorMap, activeElevatorMap, fsmChannels.Drv_buttons, id)
-    fsm.ElevStateMachine(fsmChannels, newOrder, id, elevatorMap, newState)
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id)
+    fsm.ElevStateMachine(fsmChannels, newOrder, id, newState)
 
 }

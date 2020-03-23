@@ -2,7 +2,7 @@ package orderhandler
 
 import "../elevio"
 import "../config"
-import "fmt"
+//import "fmt"
  /*
  func CheckNewOrder(reciever chan<- config.ElevatorOrder, sender <-chan elevio.ButtonEvent, id string){
 	for{
@@ -29,41 +29,17 @@ import "fmt"
  	}
  } */
 
-func OrderHandler(elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, buttonCh <-chan elevio.ButtonEvent, id string){
+func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, id string){
 		for{
 			select{
 			case pressedButton := <- buttonCh:
 				button_type := pressedButton.Button
 				order_floor := pressedButton.Floor
-				best_elevator := costCalculator(order_floor, button_type, elevatorMap, activeElevators, id)
+				best_elevator := costCalculator(order_floor, button_type, config.ElevatorMap, config.ActiveElevatorMap, id)
 				isDone := false
-				fmt.Println(best_elevator)
-				fmt.Println(isDone)
+				sendOrder <- config.ElevatorOrder{button_type, order_floor, best_elevator, isDone}
 			}
 		}
-
 }
 
-func RecievePeer(sender <-chan []string){
-	for{
-		select{
-		case  <- sender:
 
-		}
-	}
-}
-
-func RecievedStateUpdateFromNetwork(state <-chan map[string]config.ElevatorState, elevatorMap map[string]config.ElevatorState){
-	for{
-		select{
-		case newState := <- state:
-			for id, elevatorState := range newState{
-				if val, ok := elevatorMap[id]; ok {
-					fmt.Println(val)
-   					elevatorMap[id] = elevatorState	
-				}
-			}
-			fmt.Println(len(elevatorMap))
-		}
-	}
-}

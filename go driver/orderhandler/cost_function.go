@@ -2,6 +2,7 @@ package orderhandler
 
 import "../config"
 import "../elevio"
+//import "fmt"
 
 func costCalculator(floor int, button_type elevio.ButtonType, elevatorMap map[string]config.ElevatorState, activeElevators map[string]bool, id string) string {
 	if button_type == elevio.BT_Cab {
