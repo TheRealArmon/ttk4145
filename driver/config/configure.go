@@ -31,6 +31,7 @@ const(
 )
 
 type ElevatorState struct{
+  Id                          int
   Floor                       int
   Dir                         Directions
   ElevState                   State

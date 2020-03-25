@@ -17,7 +17,8 @@ import (
 
 func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState,
 	activeElevators *[config.NumElevators]bool) {
-
+	iter := 1
+	
 	fmt.Println("Started")
 	for {
 		select {
@@ -28,13 +29,13 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			
 			//If recievig from a new peer, upadate avtive elevator map
+			ch.TransmittStateCh <- *elevatorList
 			
 			for _, peer := range p.New{
 				peerId, _ := strconv.Atoi(peer)
 				activeElevators[peerId] = true
+				ch.TransmittStateCh <- *elevatorList
 			}
-			
-
 			
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0{
@@ -47,15 +48,21 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
+			fmt.Println("Iteration %v", iter)
 			for i, elevatorState := range newState{
-				if (i != id){
+				if (i != id && elevatorState.Id != id){
 					elevatorList[i] = elevatorState
 				}
+				fmt.Println("Id: ", i)
+				fmt.Println(elevatorList[i])
 			}
+			iter++
 
 		case newOrder := <-ch.RecieveOrderCh:
+			fmt.Println(newOrder)
 			id := newOrder.ExecutingElevator
 			elevatorList[id].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
+
 		}
 
 	}

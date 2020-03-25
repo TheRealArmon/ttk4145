@@ -2,7 +2,7 @@ package orderhandler
 
 import "../config"
 import "../elevio"
-//import "fmt"
+import "fmt"
 //import "sync"
 
 func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[config.NumElevators]config.ElevatorState,
@@ -37,6 +37,8 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 		if cost == 0 && elevator.Dir != config.Stop {
 			cost += 4
 		}
+		fmt.Printf("%v", id)
+		fmt.Println("Has cost %v", cost)
 		if cost < minCost {
 			minCost = cost
 			bestElevator = id
