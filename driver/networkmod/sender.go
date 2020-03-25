@@ -7,7 +7,7 @@ import (
 )
 
 
-func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, newState <-chan [config.NumElevators]config.ElevatorState) {
+func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, newState <-chan map[string][config.NumElevators]config.ElevatorState) {
 	for {
 		select{
 		case orderMsg := <- newOrder:

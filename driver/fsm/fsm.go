@@ -4,6 +4,7 @@ import "../elevio"
 import "../config"
 import "../timer"
 import "../orderhandler"
+import "strconv"
 //import "sync"
 //import "fmt"
 //import "time"
@@ -22,9 +23,10 @@ func initState(elevator *config.ElevatorState) {
 }
 
 func reachedFloor(sender <-chan bool, elevatorStatus *config.ElevatorState) {
+  orderhandler.SwitchOffButtonLight(elevatorStatus.Floor)
   elevio.SetMotorDirection(elevio.MD_Stop)
   elevatorStatus.ElevState = config.Idle
-  elevatorStatus.Dir = orderhandler.FindDirection(elevatorStatus)
+  elevatorStatus.Dir = config.Stop//orderhandler.FindDirection(elevatorStatus)
   elevio.SetDoorOpenLamp(true)
   for {
     select{
@@ -35,16 +37,13 @@ func reachedFloor(sender <-chan bool, elevatorStatus *config.ElevatorState) {
   }
 }
 
-/*func updateElevatorList(elevator config.ElevatorState, id int, newState chan<- [config.NumElevators]config.ElevatorState,
-  elevatorList *[config.NumElevators]config.ElevatorState){
-  elevatorList[id] = elevator
-  newState <- *elevatorList
-  }*/
 
 
-func ElevStateMachine(ch config.FSMChannels, id int, newState chan<- [config.NumElevators]config.ElevatorState,
+
+func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, newState chan<- map[string][config.NumElevators]config.ElevatorState,
   elevatorList *[config.NumElevators]config.ElevatorState) {
 
+  idAsString := strconv.Itoa(id)
 
   elevator := config.ElevatorState{
     Id:        id,
@@ -69,7 +68,6 @@ func ElevStateMachine(ch config.FSMChannels, id int, newState chan<- [config.Num
   }
 
   elevatorList[id] = elevator
-  //updateElevatorList(elevator, id, newState, elevatorList)
 
   changedState := true
 
@@ -93,7 +91,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, newState chan<- [config.Num
           changedState = true
         }
         if changedState{
-          go func(){newState <- *elevatorList}()
+          go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
           changedState = false
         }
         
@@ -106,15 +104,14 @@ func ElevStateMachine(ch config.FSMChannels, id int, newState chan<- [config.Num
         if orderhandler.CheckIfArrived(floor, &elevatorList[id], id){
           elevatorList[id].ElevState = config.ArrivedAtFloor
         }
-        //newState <- *elevatorList
-        //updateElevatorList(elevator, id, newState, elevatorList)
+        go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
       }
 
     case config.ArrivedAtFloor:
+      go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}}()
+      go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}}()
       go timer.SetTimer(ch.Open_door, 3)
       reachedFloor(ch.Open_door, &elevatorList[id])
-      newState <- *elevatorList
-      //updateElevatorList(elevator, id, newState, elevatorList)
     }
   }
 }

@@ -60,13 +60,13 @@ func CheckIfArrived(floor int, elevatorState *config.ElevatorState, id int) bool
   switch elevatorState.Dir {
   case config.MovingUp:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallUp] || !checkOrdersAbove(elevatorState){
-      switchOffButtonLight(floor)
+      //switchOffButtonLight(floor)
       clearOrderQueue(floor, elevatorState)
       return true
     }
   case config.MovingDown:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallDown] || !checkOrdersBelow(elevatorState){
-      switchOffButtonLight(floor)
+      //switchOffButtonLight(floor)
       clearOrderQueue(floor, elevatorState)
       return true
     }
@@ -80,7 +80,7 @@ func CheckOrderSameFLoor(elevatorState *config.ElevatorState, id int) bool{
   if elevatorState.Queue[floor][elevio.BT_Cab] ||
       elevatorState.Queue[floor][elevio.BT_HallUp] ||
         elevatorState.Queue[floor][elevio.BT_HallDown]{
-          switchOffButtonLight(floor)
+          //switchOffButtonLight(floor)
           clearOrderQueue(floor, elevatorState)
           return true
   }
@@ -93,7 +93,7 @@ func clearOrderQueue(floor int, elevatorState *config.ElevatorState){
   elevatorState.Queue[floor][elevio.BT_HallDown] = false
 }
 
-func switchOffButtonLight(floor int){
+func SwitchOffButtonLight(floor int){
   for button := elevio.BT_HallUp; button < config.NumBtns; button++{
     elevio.SetButtonLamp(button, floor, false)
   }

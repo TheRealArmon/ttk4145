@@ -51,9 +51,9 @@ type NetworkChannels struct {
     PeerTxEnable          chan bool
     PeerUpdateCh          chan peers.PeerUpdate
     TransmittOrderCh      chan ElevatorOrder
-    TransmittStateCh      chan [NumElevators]ElevatorState
+    TransmittStateCh      chan map[string][NumElevators]ElevatorState
     RecieveOrderCh        chan ElevatorOrder
-    RecieveStateCh        chan [NumElevators]ElevatorState
+    RecieveStateCh        chan map[string][NumElevators]ElevatorState
 }
 
 type ElevatorOrder struct{

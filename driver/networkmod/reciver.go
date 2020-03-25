@@ -3,6 +3,7 @@ package networkmod
 import (
 	"fmt"
 	"../config"
+	"../orderhandler"
 	//"reflect"
 	//"time"
 	//"sync"
@@ -29,12 +30,12 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			
 			//If recievig from a new peer, upadate avtive elevator map
-			ch.TransmittStateCh <- *elevatorList
+			//ch.TransmittStateCh <- *elevatorList
 			
 			for _, peer := range p.New{
 				peerId, _ := strconv.Atoi(peer)
 				activeElevators[peerId] = true
-				ch.TransmittStateCh <- *elevatorList
+				//ch.TransmittStateCh <- *elevatorList
 			}
 			
 			//If lost a peer, update the active elevator map
@@ -48,20 +49,24 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
-			fmt.Println("Iteration %v", iter)
-			for i, elevatorState := range newState{
-				if (i != id && elevatorState.Id != id){
-					elevatorList[i] = elevatorState
+			for i, elevatorStateList := range newState{
+				senderIdAsInt,_ := strconv.Atoi(i)
+				if (senderIdAsInt != id){
+					for j, elevatorState := range elevatorStateList{
+						if (j != id){
+							elevatorList[j] = elevatorState
+						}
+					}
 				}
-				fmt.Println("Id: ", i)
-				fmt.Println(elevatorList[i])
 			}
 			iter++
 
 		case newOrder := <-ch.RecieveOrderCh:
-			fmt.Println(newOrder)
 			id := newOrder.ExecutingElevator
 			elevatorList[id].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
+			if (newOrder.OrderStatus){
+				orderhandler.SwitchOffButtonLight(newOrder.Floor)
+			}
 
 		}
 

@@ -22,14 +22,16 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 		if cost == 0 && elevator.ElevState == config.Idle {
 			return id
 		}
-		if cost < 0{
-			cost = -cost
-			if elevator.Dir == config.MovingUp{
-				cost += 3
-			}
-		}
 		if cost > 0 && elevator.Dir == config.MovingDown {
 			cost += 3
+		}
+		if cost < 0{
+			fmt.Println("cost er negativ for heis nr: ", id)
+			cost = -cost
+			if elevator.Dir == config.MovingUp{
+				fmt.Println("Plusser på 3 for heis nr:", id)
+				cost += 3
+			}
 		}
 		if elevator.Dir == config.ArrivedAtFloor {
 			cost++
@@ -37,12 +39,16 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 		if cost == 0 && elevator.Dir != config.Stop {
 			cost += 4
 		}
-		fmt.Printf("%v", id)
-		fmt.Println("Has cost %v", cost)
+		fmt.Printf("%v ", id)
+		fmt.Printf("has cost %v ", cost)
+		fmt.Printf("with dircetion, %v", elevator.Dir)
+		fmt.Println(" at floor", floor)
 		if cost < minCost {
 			minCost = cost
 			bestElevator = id
+			
 		}
 	}
+	fmt.Println("")
 	return bestElevator
 }
