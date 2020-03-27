@@ -1,14 +1,12 @@
 package timer
 
 import "time"
+import "../config"
 
-func SetTimer(reciever chan<- bool, seconds time.Duration) {
-  ticker := time.NewTicker(seconds * 1000 * time.Millisecond)
-  for {
-    select {
-    case <- ticker.C:
-      reciever <- true
-      return
+
+func SetTimer(timerCh config.TimerChannels, timerCase config.TimerCase){
+    switch timerCase{
+    case config.Door:
+      go func(){time.Sleep(3 * time.Second); timerCh.Open_door <- true}()
     }
   }
-}

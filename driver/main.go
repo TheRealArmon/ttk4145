@@ -30,14 +30,21 @@ func main(){
       Drv_buttons: make(chan elevio.ButtonEvent),
       Drv_floors: make(chan int),
       Drv_stop: make(chan bool),
+    }
+
+    timerChannels := config.TimerChannels{
       Open_door: make(chan bool),
     }
+
 
     newOrder := make(chan config.ElevatorOrder)
     newState := make(chan map[string][config.NumElevators]config.ElevatorState)
 
     var ElevatorList [config.NumElevators]config.ElevatorState
     var ActiveElevatorList [config.NumElevators]bool
+
+
+
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -63,6 +70,6 @@ func main(){
     go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList)
 
     go orderhandler.OrderHandler(fsmChannels.Drv_buttons, newOrder, id, &ElevatorList, &ActiveElevatorList)
-    fsm.ElevStateMachine(fsmChannels, id, newOrder, newState, &ElevatorList)
+    fsm.ElevStateMachine(fsmChannels, id, newOrder, newState, &ElevatorList, timerChannels)
 
 }

@@ -22,26 +22,38 @@ func initState(elevator *config.ElevatorState) {
   elevio.SetMotorDirection(elevio.MD_Down)
 }
 
-func reachedFloor(sender <-chan bool, elevatorStatus *config.ElevatorState) {
+func reachedFloor(door_timer <-chan bool, elevatorStatus *config.ElevatorState) {
+  elevatorStatus.Dir = config.Stop
   orderhandler.SwitchOffButtonLight(elevatorStatus.Floor)
   elevio.SetMotorDirection(elevio.MD_Stop)
-  elevatorStatus.ElevState = config.Idle
-  elevatorStatus.Dir = config.Stop//orderhandler.FindDirection(elevatorStatus)
   elevio.SetDoorOpenLamp(true)
   for {
     select{
-    case <- sender:
+    case <- door_timer:
       elevio.SetDoorOpenLamp(false)
+      elevatorStatus.Dir = orderhandler.FindDirection(elevatorStatus)
+      if (elevatorStatus.Dir == config.Stop){
+        elevatorStatus.ElevState = config.Idle
+      }else{elevatorStatus.ElevState = config.Moving}
+      setMotorDirection(elevatorStatus.Dir)
       return
     }
   }
 }
 
 
+func setMotorDirection(dir config.Directions){
+  if (dir == config.MovingUp){
+    elevio.SetMotorDirection(elevio.MD_Up)
+  }
+  if (dir == config.MovingDown){
+    elevio.SetMotorDirection(elevio.MD_Down)
+  }
+}
 
 
 func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, newState chan<- map[string][config.NumElevators]config.ElevatorState,
-  elevatorList *[config.NumElevators]config.ElevatorState) {
+  elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
 
   idAsString := strconv.Itoa(id)
 
@@ -69,8 +81,6 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
 
   elevatorList[id] = elevator
 
-  changedState := true
-
   for {
     switch elevatorList[id].ElevState {
     case config.Idle:
@@ -78,23 +88,18 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
         if elevatorList[id].Dir != config.Stop{
           if elevatorList[id].Dir == config.MovingUp{
             elevio.SetMotorDirection(elevio.MD_Up)
-            changedState = true
           }
           if elevatorList[id].Dir == config.MovingDown{
             elevio.SetMotorDirection(elevio.MD_Down)
-            changedState = true
           }
           elevatorList[id].ElevState = config.Moving
         }
         if orderhandler.CheckOrderSameFLoor(&elevatorList[id], id){
           elevatorList[id].ElevState = config.ArrivedAtFloor
-          changedState = true
         }
-        if changedState{
+        if (elevatorList[id].ElevState != config.Idle){
           go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
-          changedState = false
         }
-        
 
     case config.Moving:
       select{
@@ -110,10 +115,9 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
     case config.ArrivedAtFloor:
       go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}}()
       go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}}()
-      go timer.SetTimer(ch.Open_door, 3)
-      reachedFloor(ch.Open_door, &elevatorList[id])
+      go timer.SetTimer(timerCh, config.Door)
+      reachedFloor(timerCh.Open_door, &elevatorList[id])
+      go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
     }
   }
 }
-
-

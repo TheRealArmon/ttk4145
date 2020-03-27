@@ -30,6 +30,17 @@ const(
   MovingUp              = 1
 )
 
+
+type TimerCase int
+
+const(
+  Door TimerCase = 0
+)
+
+type TimerChannels struct {
+  Open_door     chan bool
+}
+
 type ElevatorState struct{
   Id                          int
   Floor                       int
@@ -42,10 +53,7 @@ type FSMChannels struct {
   Drv_buttons       chan elevio.ButtonEvent
   Drv_floors        chan int
   Drv_stop          chan bool
-  Open_door         chan bool
 }
-
-
 
 type NetworkChannels struct {
     PeerTxEnable          chan bool

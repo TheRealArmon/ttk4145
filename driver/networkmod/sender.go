@@ -1,7 +1,7 @@
 package networkmod
 
 import (
-	//"fmt"
+	"fmt"
 	//"time"
 	"../config"
 )
@@ -14,6 +14,7 @@ func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, n
 			ch.TransmittOrderCh <- orderMsg
 			//time.Sleep(1 * time.Second)//må endre tid, sikkert sende meldinger mye oftere
 		case stateMsg := <- newState:
+			fmt.Println("Transmitting state updates")
 			ch.TransmittStateCh <- stateMsg
 		
 		}	

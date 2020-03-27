@@ -10,16 +10,10 @@ import (
 	"strconv"
 )
 
-// We define some custom struct to send over the network.
-// Note that all members we want to transmit must be public. Any private members
-//  will be received as zero-values.
-
-
-
 func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState,
 	activeElevators *[config.NumElevators]bool) {
-	iter := 1
-	
+	idAsString := strconv.Itoa(id)
+
 	fmt.Println("Started")
 	for {
 		select {
@@ -46,20 +40,14 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 				}
 			}
 			
+			go func(){ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
 			for i, elevatorStateList := range newState{
 				senderIdAsInt,_ := strconv.Atoi(i)
-				if (senderIdAsInt != id){
-					for j, elevatorState := range elevatorStateList{
-						if (j != id){
-							elevatorList[j] = elevatorState
-						}
-					}
-				}
+				elevatorList[senderIdAsInt] = elevatorStateList[senderIdAsInt]
 			}
-			iter++
 
 		case newOrder := <-ch.RecieveOrderCh:
 			id := newOrder.ExecutingElevator
