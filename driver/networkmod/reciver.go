@@ -2,8 +2,11 @@ package networkmod
 
 import (
 	"fmt"
+
 	"../config"
+	"../elevio"
 	"../orderhandler"
+
 	//"reflect"
 	//"time"
 	//"sync"
@@ -22,43 +25,55 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			fmt.Printf("  Peers:    %q\n", p.Peers)
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
-			
+
 			//If recievig from a new peer, upadate avtive elevator map
 			//ch.TransmittStateCh <- *elevatorList
-			
-			for _, peer := range p.New{
+
+			for _, peer := range p.New {
 				peerId, _ := strconv.Atoi(peer)
 				activeElevators[peerId] = true
-				//go func(){ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
 			}
-			
+
 			//If lost a peer, update the active elevator map
-			if len(p.Lost) > 0{
-				for _, peer := range p.Lost{
+			if len(p.Lost) > 0 {
+				for _, peer := range p.Lost {
 					peerId, _ := strconv.Atoi(peer)
 					activeElevators[peerId] = false
-					//go func(){ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
 				}
 			}
-			
-			ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
 
-		    //Update local elevator map with the state of the peers on the network
+			ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString: *elevatorList}
+
+			//Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:
-			for i, elevatorStateList := range newState{
-				senderIdAsInt,_ := strconv.Atoi(i)
+			for i, elevatorStateList := range newState {
+				senderIdAsInt, _ := strconv.Atoi(i)
 				elevatorList[senderIdAsInt] = elevatorStateList[senderIdAsInt]
+				if checkCabQueue(elevatorStateList[id]) {
+					elevatorList[id] = elevatorStateList[id]
+				}
 			}
-			
+			fmt.Println("Id: ", id)
+			fmt.Println("State: ", elevatorList[id])
+			fmt.Println("")
 
 		case newOrder := <-ch.RecieveOrderCh:
 			id := newOrder.ExecutingElevator
 			elevatorList[id].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
-			if (newOrder.OrderStatus){
+			if newOrder.OrderStatus {
 				orderhandler.SwitchOffButtonLight(newOrder.Floor)
 			}
 
 		}
 
 	}
+}
+
+func checkCabQueue(elevatorState config.ElevatorState) bool {
+	for floor := 0; floor < config.NumFloors; floor++ {
+		if elevatorState.Queue[floor][elevio.BT_Cab] {
+			return true
+		}
+	}
+	return false
 }
