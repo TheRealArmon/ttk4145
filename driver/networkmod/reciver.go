@@ -24,12 +24,10 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			
 			//If recievig from a new peer, upadate avtive elevator map
-			//ch.TransmittStateCh <- *elevatorList
 			
 			for _, peer := range p.New{
 				peerId, _ := strconv.Atoi(peer)
 				activeElevators[peerId] = true
-				//ch.TransmittStateCh <- *elevatorList
 			}
 			
 			//If lost a peer, update the active elevator map
@@ -40,7 +38,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 				}
 			}
 			
-			go func(){ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
+			ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
 
 		    //Update local elevator map with the state of the peers on the network
 		case newState := <-ch.RecieveStateCh:

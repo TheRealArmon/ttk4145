@@ -80,6 +80,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
   }
 
   elevatorList[id] = elevator
+  newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
 
   for {
     switch elevatorList[id].ElevState {
