@@ -55,6 +55,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			if (newOrder.OrderStatus){
 				orderhandler.SwitchOffButtonLight(newOrder.Floor)
 			}
+			fmt.Printf("")
 
 		}
 
