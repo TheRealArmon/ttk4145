@@ -56,6 +56,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
   elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
 
   idAsString := strconv.Itoa(id)
+  idIndex = id - 1
 
   elevator := config.ElevatorState{
     Id:        id,
@@ -74,6 +75,10 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
       elevator.Floor = floor
       elevio.SetMotorDirection(elevio.MD_Stop)
       elevio.SetFloorIndicator(floor)
+      orderhandler.ClearOrderQueue(floor, &elevatorList[id])
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[id].Floor, id, true}
       break
     }
     break
@@ -110,12 +115,13 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
         if orderhandler.CheckIfArrived(floor, &elevatorList[id], id){
           elevatorList[id].ElevState = config.ArrivedAtFloor
         }
-        go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
+        newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
       }
 
     case config.ArrivedAtFloor:
-      go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}}()
-      go func(){sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}}()
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[id].Floor, id, true}
       go timer.SetTimer(timerCh, config.Door)
       reachedFloor(timerCh.Open_door, &elevatorList[id])
       go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
