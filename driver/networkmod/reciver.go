@@ -29,8 +29,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			
 			for _, peer := range p.New{
 				peerId, _ := strconv.Atoi(peer)
-				activeElevators[peerId-1] = true
-				time.Sleep(1*time.Millisecond)
+				go waitActive(activeElevators, peerId-1)
 				if elevatorList[idIndex].Id == id{
 					fmt.Println("This is the list being sent when new elev is connected: ", elevatorList[peerId-1])
 					ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
@@ -53,7 +52,8 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			for i, elevatorStateList := range newState{
 				senderIdAsInt,_ := strconv.Atoi(i)
 				elevatorList[senderIdAsInt-1] = elevatorStateList[senderIdAsInt-1]
-				if checkCabQueue(elevatorStateList[idIndex]) && senderIdAsInt != id{
+				if checkCabQueue(elevatorStateList[idIndex]) && senderIdAsInt != id && !activeElevators[senderIdAsInt-1]{
+					fmt.Println("Temp")
 					tempElev := elevatorStateList[idIndex]
 					go syncElev(idIndex, tempElev, elevatorList)
 				}
@@ -85,14 +85,22 @@ func checkCabQueue(elevatorState config.ElevatorState) bool {
 //Making sure that the reconnecting elevator has the right state so that it can execute pre existing cab orders, as well as
 //turning on lights
 func syncElev(id int, tempElev config.ElevatorState, elevatorList *[config.NumElevators]config.ElevatorState){
-	time.Sleep(3 * time.Second)
-	if tempElev.Dir == -1 && tempElev.Queue[tempElev.Floor][elevio.BT_Cab]{
+	if tempElev.Dir == -1 && tempElev.ElevState != config.ArrivedAtFloor{
 		tempElev.Floor -= 1
 	}
 	for floor := 0; floor < config.NumFloors; floor++{
 		elevio.SetButtonLamp(elevio.BT_Cab, floor, tempElev.Queue[floor][elevio.BT_Cab])
 	}
 	tempElev.ElevState = config.Idle
+	tempElev.Dir = config.Stop
+	time.Sleep(3 * time.Second)
 	elevatorList[id] = tempElev
+	fmt.Println("After setting temp elev the state is: ", elevatorList[id])
+	fmt.Println("")
 	return
+}
+
+func waitActive(activeElevators *[config.NumElevators]bool, id int){
+	time.Sleep(2 * time.Second)
+	activeElevators[id] = true
 }

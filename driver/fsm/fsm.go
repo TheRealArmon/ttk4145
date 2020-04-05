@@ -5,10 +5,6 @@ import "../config"
 import "../timer"
 import "../orderhandler"
 import "strconv"
-//import "sync"
-//import "fmt"
-//import "time"
-//import "reflect"
 
 
 func initState(elevator *config.ElevatorState) {
@@ -75,10 +71,6 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
       elevator.Floor = floor
       elevio.SetMotorDirection(elevio.MD_Stop)
       elevio.SetFloorIndicator(floor)
-      orderhandler.ClearOrderQueue(floor, &elevatorList[idIndex])
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
       break
     }
     break
@@ -124,7 +116,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
       sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
       go timer.SetTimer(timerCh, config.Door)
       reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
-      go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
+      newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
     }
   }
 }
