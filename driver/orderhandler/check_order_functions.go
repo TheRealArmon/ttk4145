@@ -56,17 +56,15 @@ func checkOrdersBelow(elevatorState *config.ElevatorState) bool{
 }
 
 
-func CheckIfArrived(floor int, elevatorState *config.ElevatorState, id int) bool{
+func CheckIfArrived(floor int, elevatorState *config.ElevatorState) bool{
   switch elevatorState.Dir {
   case config.MovingUp:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallUp] || !checkOrdersAbove(elevatorState){
-      //switchOffButtonLight(floor)
       ClearOrderQueue(floor, elevatorState)
       return true
     }
   case config.MovingDown:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallDown] || !checkOrdersBelow(elevatorState){
-      //switchOffButtonLight(floor)
       ClearOrderQueue(floor, elevatorState)
       return true
     }
@@ -75,12 +73,11 @@ func CheckIfArrived(floor int, elevatorState *config.ElevatorState, id int) bool
 }
 
 
-func CheckOrderSameFLoor(elevatorState *config.ElevatorState, id int) bool{
+func CheckOrderSameFLoor(elevatorState *config.ElevatorState) bool{
   floor := elevatorState.Floor
   if elevatorState.Queue[floor][elevio.BT_Cab] ||
       elevatorState.Queue[floor][elevio.BT_HallUp] ||
         elevatorState.Queue[floor][elevio.BT_HallDown]{
-          //switchOffButtonLight(floor)
           ClearOrderQueue(floor, elevatorState)
           return true
   }

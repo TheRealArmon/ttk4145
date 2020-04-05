@@ -56,7 +56,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
   elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
 
   idAsString := strconv.Itoa(id)
-  idIndex = id - 1
+  idIndex := id - 1
 
   elevator := config.ElevatorState{
     Id:        id,
@@ -75,55 +75,55 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
       elevator.Floor = floor
       elevio.SetMotorDirection(elevio.MD_Stop)
       elevio.SetFloorIndicator(floor)
-      orderhandler.ClearOrderQueue(floor, &elevatorList[id])
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[id].Floor, id, true}
+      orderhandler.ClearOrderQueue(floor, &elevatorList[idIndex])
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
       break
     }
     break
   }
 
-  elevatorList[id] = elevator
+  elevatorList[idIndex] = elevator
   newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
 
   for {
-    switch elevatorList[id].ElevState {
+    switch elevatorList[idIndex].ElevState {
     case config.Idle:
-        elevatorList[id].Dir = orderhandler.FindDirection(&elevatorList[id])
-        if elevatorList[id].Dir != config.Stop{
-          if elevatorList[id].Dir == config.MovingUp{
+        elevatorList[idIndex].Dir = orderhandler.FindDirection(&elevatorList[idIndex])
+        if elevatorList[idIndex].Dir != config.Stop{
+          if elevatorList[idIndex].Dir == config.MovingUp{
             elevio.SetMotorDirection(elevio.MD_Up)
           }
-          if elevatorList[id].Dir == config.MovingDown{
+          if elevatorList[idIndex].Dir == config.MovingDown{
             elevio.SetMotorDirection(elevio.MD_Down)
           }
-          elevatorList[id].ElevState = config.Moving
+          elevatorList[idIndex].ElevState = config.Moving
         }
-        if orderhandler.CheckOrderSameFLoor(&elevatorList[id], id){
-          elevatorList[id].ElevState = config.ArrivedAtFloor
+        if orderhandler.CheckOrderSameFLoor(&elevatorList[idIndex]){
+          elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
-        if (elevatorList[id].ElevState != config.Idle){
-          go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
+        if (elevatorList[idIndex].ElevState != config.Idle){
+          newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
         }
 
     case config.Moving:
       select{
       case floor := <- ch.Drv_floors:
         elevio.SetFloorIndicator(floor)
-        elevatorList[id].Floor = floor
-        if orderhandler.CheckIfArrived(floor, &elevatorList[id], id){
-          elevatorList[id].ElevState = config.ArrivedAtFloor
+        elevatorList[idIndex].Floor = floor
+        if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){
+          elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
         newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
       }
 
     case config.ArrivedAtFloor:
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[id].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[id].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[id].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
       go timer.SetTimer(timerCh, config.Door)
-      reachedFloor(timerCh.Open_door, &elevatorList[id])
+      reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
       go func(){newState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
     }
   }

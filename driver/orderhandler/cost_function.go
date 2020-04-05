@@ -10,15 +10,16 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 	}
 	minCost := 1000
 	bestElevator := id
-  	cost := 0
+	cost := 0
+	idIndex := id - 1
 	for id, elevator := range elevatorList{ //iterating through all elevators
 		if !activeElevators[id] {
 			continue //if elevator offline, skip to next iteration
 		}
 		cost = floor - elevator.Floor
-		if (activeElevators[id]){
+		if (activeElevators[idIndex]){
 			if cost == 0 && elevator.ElevState == config.Idle {
-				return id
+				return elevator.Id
 			}
 			if cost > 0 && elevator.Dir == config.MovingDown {
 				cost += 3
@@ -37,7 +38,7 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 			}
 			if cost < minCost {
 				minCost = cost
-				bestElevator = id
+				bestElevator = elevator.Id
 			}
 		}
 	}

@@ -5,13 +5,9 @@ import "./fsm"
 import "./config"
 import "./orderhandler"
 import "./networkmod"
-//import "./networkmod/network/localip"
 import "./networkmod/network/peers"
 import "./networkmod/network/bcast"
-//import "os"
-//import "fmt"
 import "flag"
-//import "sync"
 import "strconv"
 
 func main(){
