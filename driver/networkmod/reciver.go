@@ -7,7 +7,8 @@ import (
 	"strconv"
 )
 
-func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool) {
+func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
+	lostConnection chan<- config.ElevatorState) {
 	idAsString := strconv.Itoa(id)
 	idIndex := id - 1
 
@@ -26,7 +27,6 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 				peerId, _ := strconv.Atoi(peer)
 				go waitActive(activeElevators, peerId-1)
 				if elevatorList[idIndex].Id == id{
-					//fmt.Println("This is the list being sent when new elev is connected: ", elevatorList[peerId-1])
 					ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
 				}
 			}
@@ -36,8 +36,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 				for _, peer := range p.Lost{
 					peerId, _ := strconv.Atoi(peer)
 					activeElevators[peerId-1] = false
-					//fmt.Println("This is the list being sent when new elev is lost: ", elevatorList[peerId-1])
-					ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+					lostConnection <- elevatorList[peerId-1]
 
 				}
 			}

@@ -33,14 +33,11 @@ func main(){
     }
 
 
-    //recievedStateUpdate := make(chan map[string][config.NumElevators]config.ElevatorState)
-    //recievedNewOrder := make(chan config.ElevatorOrder)
-
     var ElevatorList [config.NumElevators]config.ElevatorState
     var ActiveElevatorList [config.NumElevators]bool
 
 
-
+    lostConnection := make(chan config.ElevatorState)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -62,10 +59,10 @@ func main(){
     go elevio.PollFloorSensor(fsmChannels.Drv_floors)
     go elevio.PollStopButton(fsmChannels.Drv_stop)
 
-    go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList)
+    go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList, lostConnection)
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, 
-      networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, id, &ElevatorList, &ActiveElevatorList)
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, networkChannels.RecieveStateCh, 
+      networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
     fsm.ElevStateMachine(fsmChannels, id, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh, &ElevatorList, timerChannels)
 
 }
