@@ -1,14 +1,9 @@
 package orderhandler
 
-<<<<<<< HEAD
-import (
-	"strconv"
-=======
 import "../elevio"
 import "../config"
 import "strconv"
 import "fmt"
->>>>>>> origin/development
 
 	"../config"
 	"../elevio"
@@ -17,23 +12,6 @@ import "fmt"
 //import "sync"
 //import "fmt"
 
-<<<<<<< HEAD
-func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, id int,
-	elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
-	newState chan<- map[string][config.NumElevators]config.ElevatorState) {
-	idAsString := strconv.Itoa(id)
-	for {
-		select {
-		case pressedButton := <-buttonCh:
-			button_type := pressedButton.Button
-			order_floor := pressedButton.Floor
-			elevio.SetButtonLamp(button_type, order_floor, true)
-			best_elevator := costCalculator(order_floor, button_type, elevatorList, activeElevators, id)
-			isDone := false
-			go func() { sendOrder <- config.ElevatorOrder{button_type, order_floor, best_elevator, isDone} }()
-			go func() { newState <- map[string][config.NumElevators]config.ElevatorState{idAsString: *elevatorList} }()
-
-=======
 func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, recievedStateUpdate <-chan map[string][config.NumElevators]config.ElevatorState,
 	recievedOrder <-chan config.ElevatorOrder, lostConnection <-chan config.ElevatorState, id int, elevatorList *[config.NumElevators]config.ElevatorState, 
 	activeElevators *[config.NumElevators]bool,
@@ -79,7 +57,6 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 					}
 				}
 			}
->>>>>>> origin/development
 		}
 	}
 }
