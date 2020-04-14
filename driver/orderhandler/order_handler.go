@@ -46,7 +46,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 					for button := elevio.BT_HallUp; button < elevio.BT_Cab; button++{
 						if lostElevator.Queue[floor][button]{
 							elevatorList[lostElevatorIndex].Queue[floor][button] = false
-							newExecutingElevator := costCalculator(floor, button, elevatorList, activeElevators, id)
+							//newExecutingElevator := costCalculator(floor, button, elevatorList, activeElevators, id)
 
 						}
 					}
