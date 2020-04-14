@@ -1,5 +1,5 @@
 package networkmod
-
+/*
 import (
 	"fmt"
 	//"time"
@@ -19,4 +19,4 @@ func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, n
 		
 		}	
 	}	
-}
+}*/

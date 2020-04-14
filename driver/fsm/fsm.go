@@ -1,5 +1,6 @@
 package fsm
 
+<<<<<<< HEAD
 import (
 	"strconv"
 
@@ -13,6 +14,13 @@ import (
 //import "fmt"
 //import "time"
 //import "reflect"
+=======
+import "../elevio"
+import "../config"
+import "../timer"
+import "../orderhandler"
+import "strconv"
+>>>>>>> origin/development
 
 func initState(elevator *config.ElevatorState) {
 	elevio.SetDoorOpenLamp(false)
@@ -55,6 +63,7 @@ func setMotorDirection(dir config.Directions) {
 	}
 }
 
+<<<<<<< HEAD
 func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, newState chan<- map[string][config.NumElevators]config.ElevatorState,
 	elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
 
@@ -124,4 +133,78 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
 			go func() { newState <- map[string][config.NumElevators]config.ElevatorState{idAsString: *elevatorList} }()
 		}
 	}
+=======
+
+func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
+  elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
+
+  idAsString := strconv.Itoa(id)
+  idIndex := id - 1
+
+  elevator := config.ElevatorState{
+    Id:        id,
+    Dir:       config.Stop,
+    ElevState: config.Idle,
+    Queue:     [config.NumFloors][config.NumBtns]bool{},
+  }
+
+  //go orderhandler.AddOrdersToQueue(newOrder, &elevator)
+  initState(&elevator)
+
+  //Stop elevator in the first floor that the elevators arrive in
+  for {
+    select{
+    case floor := <- ch.Drv_floors:
+      elevator.Floor = floor
+      elevio.SetMotorDirection(elevio.MD_Stop)
+      elevio.SetFloorIndicator(floor)
+      break
+    }
+    break
+  }
+
+  elevatorList[idIndex] = elevator
+  sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+
+  for {
+    switch elevatorList[idIndex].ElevState {
+    case config.Idle:
+        elevatorList[idIndex].Dir = orderhandler.FindDirection(&elevatorList[idIndex])
+        if elevatorList[idIndex].Dir != config.Stop{
+          if elevatorList[idIndex].Dir == config.MovingUp{
+            elevio.SetMotorDirection(elevio.MD_Up)
+          }
+          if elevatorList[idIndex].Dir == config.MovingDown{
+            elevio.SetMotorDirection(elevio.MD_Down)
+          }
+          elevatorList[idIndex].ElevState = config.Moving
+        }
+        if orderhandler.CheckOrderSameFLoor(&elevatorList[idIndex]){
+          elevatorList[idIndex].ElevState = config.ArrivedAtFloor
+        }
+        if (elevatorList[idIndex].ElevState != config.Idle){
+          sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+        }
+
+    case config.Moving:
+      select{
+      case floor := <- ch.Drv_floors:
+        elevio.SetFloorIndicator(floor)
+        elevatorList[idIndex].Floor = floor
+        if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){
+          elevatorList[idIndex].ElevState = config.ArrivedAtFloor
+        }
+        sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+      }
+
+    case config.ArrivedAtFloor:
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
+      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
+      go timer.SetTimer(timerCh, config.Door)
+      reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
+      sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+    }
+  }
+>>>>>>> origin/development
 }

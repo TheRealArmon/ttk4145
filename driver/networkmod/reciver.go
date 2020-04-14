@@ -4,18 +4,23 @@ import (
 	"fmt"
 
 	"../config"
+<<<<<<< HEAD
 	"../elevio"
 	"../orderhandler"
 
 	//"reflect"
 	//"time"
 	//"sync"
+=======
+	"time"
+>>>>>>> origin/development
 	"strconv"
 )
 
-func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState,
-	activeElevators *[config.NumElevators]bool) {
+func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
+	lostConnection chan<- config.ElevatorState) {
 	idAsString := strconv.Itoa(id)
+	idIndex := id - 1
 
 	fmt.Println("Started")
 	for {
@@ -27,17 +32,28 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 
 			//If recievig from a new peer, upadate avtive elevator map
+<<<<<<< HEAD
 			//ch.TransmittStateCh <- *elevatorList
 
 			for _, peer := range p.New {
 				peerId, _ := strconv.Atoi(peer)
 				activeElevators[peerId] = true
+=======
+			
+			for _, peer := range p.New{
+				peerId, _ := strconv.Atoi(peer)
+				go waitActive(activeElevators, peerId-1)
+				if elevatorList[idIndex].Id == id{
+					ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+				}
+>>>>>>> origin/development
 			}
 
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0 {
 				for _, peer := range p.Lost {
 					peerId, _ := strconv.Atoi(peer)
+<<<<<<< HEAD
 					activeElevators[peerId] = false
 				}
 			}
@@ -62,13 +78,18 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			elevatorList[id].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
 			if newOrder.OrderStatus {
 				orderhandler.SwitchOffButtonLight(newOrder.Floor)
+=======
+					activeElevators[peerId-1] = false
+					lostConnection <- elevatorList[peerId-1]
+
+				}
+>>>>>>> origin/development
 			}
-
 		}
-
 	}
 }
 
+<<<<<<< HEAD
 func checkCabQueue(elevatorState config.ElevatorState) bool {
 	for floor := 0; floor < config.NumFloors; floor++ {
 		if elevatorState.Queue[floor][elevio.BT_Cab] {
@@ -76,4 +97,10 @@ func checkCabQueue(elevatorState config.ElevatorState) bool {
 		}
 	}
 	return false
+=======
+
+func waitActive(activeElevators *[config.NumElevators]bool, id int){
+	time.Sleep(2 * time.Second)
+	activeElevators[id] = true
+>>>>>>> origin/development
 }
