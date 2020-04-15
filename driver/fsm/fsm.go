@@ -28,6 +28,10 @@ func reachedFloor(door_timer <-chan bool, elevatorStatus *config.ElevatorState) 
     select{
     case <- door_timer:
       elevio.SetDoorOpenLamp(false)
+      if orderhandler.CheckOrderSameFLoor(elevatorStatus){
+        elevatorStatus.ElevState = config.ArrivedAtFloor
+        return
+      }
       elevatorStatus.Dir = orderhandler.FindDirection(elevatorStatus)
       if (elevatorStatus.Dir == config.Stop){
         elevatorStatus.ElevState = config.Idle
