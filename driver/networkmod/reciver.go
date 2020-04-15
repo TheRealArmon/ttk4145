@@ -35,13 +35,11 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			if len(p.Lost) > 0{
 				for _, peer := range p.Lost{
 					peerId, _ := strconv.Atoi(peer)
-					fmt.Println("the peer id:", peerId)
-					fmt.Println(elevatorList[peerId-1])
-					if peerId !=idIndex{
-						go waitActive(activeElevators, peerId-1, false)
-						//lostConnection <- elevatorList[peerId-1]
-					}
-
+					if peerId != id{
+						activeElevators[peerId-1] = false
+						//go waitActive(activeElevators, peerId-1, false)
+						lostConnection <- elevatorList[peerId-1]
+					}	
 				}
 			}
 		}

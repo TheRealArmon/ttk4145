@@ -3,6 +3,7 @@ package orderhandler
 import "../config"
 import "../elevio"
 import "time"
+import "strconv"
 
 func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[config.NumElevators]config.ElevatorState,
 	 activeElevators *[config.NumElevators]bool, id int) int {
@@ -38,7 +39,6 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 		if cost < minCost {
 			minCost = cost
 			bestElevator = elevator.Id
-
 		}
 	}
 	return bestElevator
@@ -68,4 +68,24 @@ func syncElev(id int, tempElev config.ElevatorState, elevatorList *[config.NumEl
 	time.Sleep(3 * time.Second)
 	elevatorList[id] = tempElev
 	return
+}
+
+//Transfers the hall orders of the lost elevator to the best suited elevator on the network
+func transferHallOrders(lostElevator config.ElevatorState, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
+	sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState, id int){
+		idAsString := strconv.Itoa(id)
+		lostElevatorIndex := lostElevator.Id-1
+		for floor := 0; floor < config.NumFloors; floor++{
+			for button := elevio.BT_HallUp; button < elevio.BT_Cab; button++{
+				if lostElevator.Queue[floor][button]{
+					elevatorList[lostElevatorIndex].Queue[floor][button] = false
+					newExecutingElevator := costCalculator(floor, button, elevatorList, activeElevators, id)
+					if newExecutingElevator == id{
+						elevatorList[id-1].Queue[floor][button] = true
+					}
+					sendOrder <- config.ElevatorOrder{button, floor, newExecutingElevator, false}
+					sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+				}
+			}
+		}
 }

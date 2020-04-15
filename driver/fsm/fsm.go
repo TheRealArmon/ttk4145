@@ -8,7 +8,6 @@ import "strconv"
 import "fmt"
 
 
-
 func initState(elevator *config.ElevatorState) {
   elevio.SetDoorOpenLamp(false)
   for i := 0; i < config.NumFloors; i++{
@@ -104,7 +103,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
     case config.Moving:
       select{
       case floor := <- ch.Drv_floors:
-        fmt.Println(floor)
+        fmt.Println(elevatorList[idIndex].Queue)
         elevio.SetFloorIndicator(floor)
         elevatorList[idIndex].Floor = floor
         if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){

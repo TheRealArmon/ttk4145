@@ -61,8 +61,8 @@ func main(){
 
     go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList, lostConnection)
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, networkChannels.RecieveStateCh, 
-      networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh,
+      networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
     fsm.ElevStateMachine(fsmChannels, id, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh, &ElevatorList, timerChannels)
 
 }
