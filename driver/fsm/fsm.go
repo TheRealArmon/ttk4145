@@ -94,6 +94,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
           elevatorList[idIndex].ElevState = config.Moving
         }
         if orderhandler.CheckOrderSameFLoor(&elevatorList[idIndex]){
+          fmt.Println("same floor")
           elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
         if (elevatorList[idIndex].ElevState != config.Idle){
