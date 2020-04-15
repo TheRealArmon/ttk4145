@@ -17,8 +17,11 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 			case pressedButton := <- buttonCh:
 				button_type := pressedButton.Button
 				order_floor := pressedButton.Floor
-				elevio.SetButtonLamp(button_type, order_floor, true)
 				best_elevator := costCalculator(order_floor, button_type, elevatorList, activeElevators, id)
+				if best_elevator == id {
+					elevatorList[idIndex].Queue[order_floor][button_type] = true
+					elevio.SetButtonLamp(button_type, order_floor, true)
+				}
 				sendOrder <- config.ElevatorOrder{button_type, order_floor, best_elevator, false}
 			
 			case newState := <- recievedStateUpdate:
