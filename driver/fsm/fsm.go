@@ -5,6 +5,8 @@ import "../config"
 import "../timer"
 import "../orderhandler"
 import "strconv"
+import "fmt"
+
 
 
 func initState(elevator *config.ElevatorState) {
@@ -102,6 +104,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
     case config.Moving:
       select{
       case floor := <- ch.Drv_floors:
+        fmt.Println(floor)
         elevio.SetFloorIndicator(floor)
         elevatorList[idIndex].Floor = floor
         if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){
