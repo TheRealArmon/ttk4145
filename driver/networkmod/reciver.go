@@ -34,12 +34,13 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0{
 				for _, peer := range p.Lost{
+
 					peerId, _ := strconv.Atoi(peer)
 					if peerId != id{
 						activeElevators[peerId-1] = false
 						//go waitActive(activeElevators, peerId-1, false)
 						lostConnection <- elevatorList[peerId-1]
-					}	
+					}
 				}
 			}
 		}
@@ -48,6 +49,6 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 
 
 func waitActive(activeElevators *[config.NumElevators]bool, id int, state bool){
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	activeElevators[id] = state
 }
