@@ -45,32 +45,17 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 	return bestElevator
 }
 
-func checkCabQueue(elevatorState config.ElevatorState) bool {
-	for floor := 0; floor < config.NumFloors; floor++ {
-		if elevatorState.Queue[floor][elevio.BT_Cab] {
-			return true
-		}
-	}
-	return false
-}
-
 
 //Making sure that the reconnecting elevator has the right state so that it can execute pre existing cab orders, as well as
 //turning on lights
 func syncElev(id int, tempElev config.ElevatorState, elevatorList *[config.NumElevators]config.ElevatorState){
-	//if tempElev.Dir == -1 && tempElev.ElevState != config.ArrivedAtFloor{
-	//	tempElev.Floor -= 1
-	//}
+	time.Sleep(3 * time.Second)
 	for floor := 0; floor < config.NumFloors; floor++{
-
 		if tempElev.Queue[floor][elevio.BT_Cab]{
 			elevio.SetButtonLamp(elevio.BT_Cab, floor, tempElev.Queue[floor][elevio.BT_Cab])
+			elevatorList[id].Queue[floor][elevio.BT_Cab] = true
 		}
 	}
-	//tempElev.ElevState = config.Idle
-	//tempElev.Dir = config.Stop
-	time.Sleep(3 * time.Second)
-	elevatorList[id].Queue = tempElev.Queue
 	return
 }
 
@@ -94,11 +79,20 @@ func transferHallOrders(lostElevator config.ElevatorState, elevatorList *[config
 		}
 }
 
- func checkIfOtherAreActive( activeElevators *[config.NumElevators]bool , id int) bool{
+ func checkIfOthersAreActive( activeElevators *[config.NumElevators]bool , id int) bool{
 	 for i :=0; i<len(activeElevators); i++{
 		 if activeElevators[i] && i!=id{
 			 return false
 		 }
 	 }
 	 return true
+ }
+
+ 
+ func turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue [config.NumFloors][config.NumBtns]bool){
+	 for floor := 0; floor < config.NumFLoors; floor++{
+		for button := elevio.BT_HallUp; button < elevio.BT_Cab; button++{
+			elevio.SetButtonLamp(button, floor, sendersElevatorQueue[floor][button])
+		}
+	 }
  }

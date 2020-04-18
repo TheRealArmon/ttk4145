@@ -3,12 +3,7 @@ package orderhandler
 import "../elevio"
 import "../config"
 import "strconv"
-import "fmt"
-
-	"../config"
-	"../elevio"
-)
-
+//import "fmt"
 //import "sync"
 //import "fmt"
 
@@ -33,10 +28,12 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 				for i, elevatorStateList := range newState{
 					senderIdAsInt,_ := strconv.Atoi(i)
 					elevatorList[senderIdAsInt-1] = elevatorStateList[senderIdAsInt-1]
-					if checkCabQueue(elevatorStateList[idIndex]) && senderIdAsInt != id && !activeElevators[senderIdAsInt-1]{
-						tempElev := elevatorStateList[idIndex]
+					if senderIdAsInt != id && !activeElevators[senderIdAsInt-1]{
 						activeElevators[senderIdAsInt-1] = true
+						stateFromSender := elevatorStateList[idIndex]
+						sendersElevatorQueue := elevatorStateList[senderIdAsInt-1].Queue
 						go syncElev(idIndex, tempElev, elevatorList)
+						go turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue)
 					}
 					if elevatorStateList[senderIdAsInt-1].ElevState == config.SystemFailure{
 						activeElevators[senderIdAsInt-1] = false
@@ -45,9 +42,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 
 			case newOrder := <- recievedOrder:
 				executingElevator := newOrder.ExecutingElevator
-				//if elevatorList[executingElevator-1].ElevState != config.ArrivedAtFloor || newOrder.OrderStatus{
 				elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
-				//}
 				if (newOrder.Button != elevio.BT_Cab || executingElevator == id){
 					elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
 				}
@@ -58,4 +53,4 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 			}
 		}
 	}
-}
+
