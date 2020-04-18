@@ -92,7 +92,9 @@ func transferHallOrders(lostElevator config.ElevatorState, elevatorList *[config
  func turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue [config.NumFloors][config.NumBtns]bool){
 	 for floor := 0; floor < config.NumFloors; floor++{
 		for button := elevio.BT_HallUp; button < elevio.BT_Cab; button++{
-			elevio.SetButtonLamp(button, floor, sendersElevatorQueue[floor][button])
+			if sendersElevatorQueue[floor][button]{
+				elevio.SetButtonLamp(button, floor, true)
+			}
 		}
 	 }
  }
