@@ -18,7 +18,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 				button_type := pressedButton.Button
 				order_floor := pressedButton.Floor
 				best_elevator := costCalculator(order_floor, button_type, elevatorList, activeElevators, id)
-				if best_elevator == id && checkIfOtherAreActive(activeElevators, idIndex){
+				if best_elevator == id && checkIfOthersAreActive(activeElevators, idIndex){
 					elevatorList[idIndex].Queue[order_floor][button_type] = true
 					elevio.SetButtonLamp(button_type, order_floor, true)
 				}
@@ -32,7 +32,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 						activeElevators[senderIdAsInt-1] = true
 						stateFromSender := elevatorStateList[idIndex]
 						sendersElevatorQueue := elevatorStateList[senderIdAsInt-1].Queue
-						go syncElev(idIndex, tempElev, elevatorList)
+						go syncElev(idIndex, stateFromSender, elevatorList)
 						go turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue)
 					}
 					if elevatorStateList[senderIdAsInt-1].ElevState == config.SystemFailure{
