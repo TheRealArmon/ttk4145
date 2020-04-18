@@ -5,7 +5,12 @@ import "../config"
 import "strconv"
 import "fmt"
 
+	"../config"
+	"../elevio"
+)
 
+//import "sync"
+//import "fmt"
 
 func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
 	recievedStateUpdate <-chan map[string][config.NumElevators]config.ElevatorState, recievedOrder <-chan config.ElevatorOrder,
@@ -52,4 +57,5 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 				go transferHallOrders(lostElevator, elevatorList, activeElevators, sendOrder, sendState, id)
 			}
 		}
+	}
 }

@@ -9,14 +9,14 @@ import "strconv"
 import "time"
 
 func initState(elevator *config.ElevatorState) {
-  elevio.SetDoorOpenLamp(false)
-  for i := 0; i < config.NumFloors; i++{
-    for j := elevio.BT_HallUp; j < config.NumBtns; j++{
-      elevio.SetButtonLamp(j, i, false)
-      elevator.Queue[i][j] = false
-    }
-  }
-  elevio.SetMotorDirection(elevio.MD_Down)
+	elevio.SetDoorOpenLamp(false)
+	for i := 0; i < config.NumFloors; i++ {
+		for j := elevio.BT_HallUp; j < config.NumBtns; j++ {
+			elevio.SetButtonLamp(j, i, false)
+			elevator.Queue[i][j] = false
+		}
+	}
+	elevio.SetMotorDirection(elevio.MD_Down)
 }
 
 func reachedFloor(door_timer <-chan bool, elevatorStatus *config.ElevatorState) {
@@ -42,16 +42,14 @@ func reachedFloor(door_timer <-chan bool, elevatorStatus *config.ElevatorState) 
   }
 }
 
-
-func setMotorDirection(dir config.Directions){
-  if (dir == config.MovingUp){
-    elevio.SetMotorDirection(elevio.MD_Up)
-  }
-  if (dir == config.MovingDown){
-    elevio.SetMotorDirection(elevio.MD_Down)
-  }
+func setMotorDirection(dir config.Directions) {
+	if dir == config.MovingUp {
+		elevio.SetMotorDirection(elevio.MD_Up)
+	}
+	if dir == config.MovingDown {
+		elevio.SetMotorDirection(elevio.MD_Down)
+	}
 }
-
 
 func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
   elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels, lostConnection chan<- config.ElevatorState) {

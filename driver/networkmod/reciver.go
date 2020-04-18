@@ -2,9 +2,11 @@ package networkmod
 
 import (
 	"fmt"
-	"../config"
-	"time"
+
 	"strconv"
+	"time"
+
+	"../config"
 )
 
 func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
@@ -34,7 +36,6 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 			//If lost a peer, update the active elevator map
 			if len(p.Lost) > 0{
 				for _, peer := range p.Lost{
-
 					peerId, _ := strconv.Atoi(peer)
 					if peerId != id{
 						activeElevators[peerId-1] = false
