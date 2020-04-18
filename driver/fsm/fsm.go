@@ -5,8 +5,8 @@ import "../config"
 import "../timer"
 import "../orderhandler"
 import "strconv"
-import "fmt"
-
+//import "fmt"
+import "time"
 
 func initState(elevator *config.ElevatorState) {
   elevio.SetDoorOpenLamp(false)
@@ -54,7 +54,7 @@ func setMotorDirection(dir config.Directions){
 
 
 func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
-  elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels) {
+  elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels, lostConnection chan<- config.ElevatorState) {
 
   idAsString := strconv.Itoa(id)
   idIndex := id - 1
@@ -83,7 +83,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
 
   elevatorList[idIndex] = elevator
   sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
-
+  ticker := time.NewTicker(5000 * time.Millisecond)
   for {
     switch elevatorList[idIndex].ElevState {
     case config.Idle:
@@ -96,9 +96,9 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
             elevio.SetMotorDirection(elevio.MD_Down)
           }
           elevatorList[idIndex].ElevState = config.Moving
+          ticker = time.NewTicker(5000 * time.Millisecond)
         }
         if orderhandler.CheckOrderSameFLoor(&elevatorList[idIndex]){
-          fmt.Println("same floor")
           elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
         if (elevatorList[idIndex].ElevState != config.Idle){
@@ -108,22 +108,35 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
     case config.Moving:
       select{
       case floor := <- ch.Drv_floors:
-        fmt.Println(elevatorList[idIndex].Queue)
+        ticker.Stop()
+        ticker = time.NewTicker(5000 * time.Millisecond)
         elevio.SetFloorIndicator(floor)
         elevatorList[idIndex].Floor = floor
         if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){
           elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
         sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+      case <- ticker.C:
+        ticker.Stop()
+        elevatorList[idIndex].ElevState = config.SystemFailure
+        lostConnection <- elevatorList[idIndex]
+        sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
       }
 
     case config.ArrivedAtFloor:
+      ticker.Stop()
       sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
       sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
       sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
       go timer.SetTimer(timerCh, config.Door)
       reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
+      if elevatorList[idIndex].ElevState == config.Moving{
+        ticker =  time.NewTicker(5000 * time.Millisecond)
+      }
       sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+
+    case config.SystemFailure:
+      
     }
   }
 }

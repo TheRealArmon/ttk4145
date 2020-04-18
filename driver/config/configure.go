@@ -20,6 +20,7 @@ const(
   Idle State      = 0
   Moving          = 1
   ArrivedAtFloor  = 2
+  SystemFailure   = 3
 )
 
 type Directions int

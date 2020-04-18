@@ -10,3 +10,5 @@ func SetTimer(timerCh config.TimerChannels, timerCase config.TimerCase){
       go func(){time.Sleep(3 * time.Second); timerCh.Open_door <- true}()
     }
   }
+
+  

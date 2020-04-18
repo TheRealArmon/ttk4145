@@ -63,6 +63,6 @@ func main(){
 
     go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh,
       networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
-    fsm.ElevStateMachine(fsmChannels, id, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh, &ElevatorList, timerChannels)
+    fsm.ElevStateMachine(fsmChannels, id, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh, &ElevatorList, timerChannels, lostConnection)
 
 }
