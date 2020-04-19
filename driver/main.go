@@ -38,6 +38,8 @@ func main(){
 
 
     lostConnection := make(chan config.ElevatorState)
+    sendState := make(chan map[string][config.NumElevators]config.ElevatorState)
+    sendOrder := make(chan config.ElevatorOrder)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -60,9 +62,10 @@ func main(){
     go elevio.PollStopButton(fsmChannels.Drv_stop)
 
     go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList, lostConnection)
+    go networkmod.SendData(networkChannels, sendOrder, sendState) 
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh,
+    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, sendOrder, sendState,
       networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
-    fsm.ElevStateMachine(fsmChannels, id, networkChannels.TransmittOrderCh, networkChannels.TransmittStateCh, &ElevatorList, timerChannels, lostConnection)
+    fsm.ElevStateMachine(fsmChannels, id, sendOrder, sendState, &ElevatorList, timerChannels, lostConnection)
 
 }
