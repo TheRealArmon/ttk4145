@@ -53,6 +53,7 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
         }
         go func(){orderCh.SendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}}()
       
+      //Elevator has taken too long to get to a new floor which means that it has motor power loss 
       case <- ticker.C:
         ticker.Stop()
         elevatorList[idIndex].State = cf.SystemFailure

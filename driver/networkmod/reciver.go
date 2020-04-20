@@ -20,10 +20,10 @@ func UpdatePeers(id int, ch cf.NetworkChannels, lostConnection chan<- cf.Elevato
 			fmt.Printf("  New:      %q\n", p.New)
 			fmt.Printf("  Lost:     %q\n", p.Lost)
 			
-			//When recieving new peer send state if initilized with correct id
+			//When recieving new peer send state if initilized with correct id. Also update activeElevators list after 1 second
 			for _, peer := range p.New{
 				peerId, _ := strconv.Atoi(peer)
-				go waitActive(activeElevators, peerId-1, true)
+				go func(){time.Sleep(1 * time.Second); activeElevators[peerId-1] = true}()
 				if elevatorList[idIndex].Id == id{
 					ch.TransmittStateCh <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}
 				}
@@ -44,7 +44,3 @@ func UpdatePeers(id int, ch cf.NetworkChannels, lostConnection chan<- cf.Elevato
 }
 
 
-func waitActive(activeElevators *[cf.NumElevators]bool, id int, state bool){
-	time.Sleep(1 * time.Second)
-	activeElevators[id] = state
-}

@@ -90,8 +90,9 @@ func transferHallOrders(lostElevator cf.ElevatorState, elevatorList *[cf.NumElev
 	 return false
  }
 
- 
+ //If an elevator is executing hall orders when an another elevator connects, the connected elevator turn on lights
  func turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue [cf.NumFloors][cf.NumBtns]bool){
+	 time.Sleep(1 * time.Second)
 	 for floor := 0; floor < cf.NumFloors; floor++{
 		for button := elevio.BT_HallUp; button < elevio.BT_Cab; button++{
 			if sendersElevatorQueue[floor][button]{
