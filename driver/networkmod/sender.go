@@ -7,9 +7,9 @@ import (
 	"../config"
 )
 
-
+//Sends data 10 times with a frequency of 20 per second
 func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, newState <-chan map[string][config.NumElevators]config.ElevatorState) {
-	const interval = 10 * time.Millisecond
+	interval = 50 * time.Millisecond
 	for {
 		select{
 		case orderMsg := <- newOrder:
