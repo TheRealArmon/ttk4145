@@ -12,12 +12,10 @@ const (
   NumBtns       = 3
 )
 
-
-
-type State int
+type States int
 
 const(
-  Idle State      = 0
+  Idle States      = 0
   Moving          = 1
   ArrivedAtFloor  = 2
   SystemFailure   = 3
@@ -46,7 +44,7 @@ type ElevatorState struct{
   Id                          int
   Floor                       int
   Dir                         Directions
-  ElevState                   State
+  State                       States
   Queue [NumFloors][NumBtns]  bool
 }
 

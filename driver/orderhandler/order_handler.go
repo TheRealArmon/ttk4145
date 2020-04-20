@@ -35,7 +35,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 						go syncElev(idIndex, stateFromSender, elevatorList)
 						go turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue)
 					}
-					if elevatorStateList[senderIdAsInt-1].ElevState == config.SystemFailure{
+					if elevatorStateList[senderIdAsInt-1].State == config.SystemFailure{
 						activeElevators[senderIdAsInt-1] = false
 					}
 				}

@@ -19,7 +19,7 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 			continue //if elevator offline, skip to next iteration
 		}
 		cost = floor - elevator.Floor
-		if cost == 0 && elevator.ElevState == config.Idle {
+		if cost == 0 && elevator.State == config.Idle {
 			return elevator.Id
 		}
 		if cost > 0 && elevator.Dir == config.MovingDown {
@@ -31,7 +31,7 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[con
 				cost += 3
 			}
 		}
-		if elevator.ElevState == config.ArrivedAtFloor {
+		if elevator.State == config.ArrivedAtFloor {
 			cost++
 		}
 		if cost == 0 && elevator.Dir != config.Stop {
