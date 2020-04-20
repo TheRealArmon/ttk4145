@@ -50,10 +50,10 @@ type ElevatorState struct{
   Queue [NumFloors][NumBtns]  bool
 }
 
-type FSMChannels struct {
-  Drv_buttons       chan elevio.ButtonEvent
-  Drv_floors        chan int
-  Drv_stop          chan bool
+type DriverChannels struct {
+  DrvButtons       chan elevio.ButtonEvent
+  DrvFloors        chan int
+  DrvStop          chan bool
 }
 
 type NetworkChannels struct {
@@ -63,6 +63,12 @@ type NetworkChannels struct {
     TransmittStateCh      chan map[string][NumElevators]ElevatorState
     RecieveOrderCh        chan ElevatorOrder
     RecieveStateCh        chan map[string][NumElevators]ElevatorState
+}
+
+type OrderChannels struct {
+  LostConnection  chan ElevatorState
+  SendState       chan map[string][NumElevators]ElevatorState
+  SendOrder       chan ElevatorOrder
 }
 
 type ElevatorOrder struct{

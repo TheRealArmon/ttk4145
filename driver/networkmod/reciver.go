@@ -2,15 +2,13 @@ package networkmod
 
 import (
 	"fmt"
-
 	"strconv"
 	"time"
-
-	"../config"
+	cf "../config"
 )
 
-func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
-	lostConnection chan<- config.ElevatorState) {
+func RecieveData(id int, ch cf.NetworkChannels, lostConnection chan<- cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState, 
+	activeElevators *[cf.NumElevators]bool) {
 	idAsString := strconv.Itoa(id)
 	idIndex := id - 1
 
@@ -29,7 +27,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 				peerId, _ := strconv.Atoi(peer)
 				go waitActive(activeElevators, peerId-1, true)
 				if elevatorList[idIndex].Id == id{
-					ch.TransmittStateCh <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+					ch.TransmittStateCh <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}
 				}
 			}
 
@@ -48,7 +46,7 @@ func RecieveData(id int, ch config.NetworkChannels, elevatorList *[config.NumEle
 }
 
 
-func waitActive(activeElevators *[config.NumElevators]bool, id int, state bool){
+func waitActive(activeElevators *[cf.NumElevators]bool, id int, state bool){
 	time.Sleep(1 * time.Second)
 	activeElevators[id] = state
 }

@@ -1,45 +1,39 @@
 package main
 
-import "./elevio"
-import "./fsm"
-import "./config"
-import "./orderhandler"
-import "./networkmod"
-import "./networkmod/network/peers"
-import "./networkmod/network/bcast"
-import "flag"
-import "strconv"
+import (
+  "./elevio"
+  "./fsm"
+  "./config"
+  "./orderhandler"
+  "./networkmod"
+  "./networkmod/network/peers"
+  "./networkmod/network/bcast"
+  "flag"
+  "strconv"
+)
 
 func main(){
+  
+  var (
+    localHostId        string
+    id                 int
+    ElevatorList       [config.NumElevators]config.ElevatorState
+    ActiveElevatorList [config.NumElevators]bool
+  )
 
-    var Local_Host_Id string
-    var id int
-    flag.StringVar(&Local_Host_Id, "hostId", "", "hostId of this peer")
+    flag.StringVar(&localHostId, "hostId", "", "hostId of this peer")
     flag.IntVar(&id, "id", 1234, "id of this peer")
     flag.Parse()
-
-    elevio.Init("localhost:"+Local_Host_Id, config.NumFloors)
+    elevio.Init("localhost:"+localHostId, config.NumFloors)
 
     idAsString := strconv.Itoa(id)
 
-    fsmChannels := config.FSMChannels{
-      Drv_buttons: make(chan elevio.ButtonEvent),
-      Drv_floors: make(chan int),
-      Drv_stop: make(chan bool),
+
+    driverChannels := config.DriverChannels{
+      DrvButtons: make(chan elevio.ButtonEvent),
+      DrvFloors: make(chan int),
+      DrvStop: make(chan bool),
     }
-
-    timerChannels := config.TimerChannels{
-      Open_door: make(chan bool),
-    }
-
-
-    var ElevatorList [config.NumElevators]config.ElevatorState
-    var ActiveElevatorList [config.NumElevators]bool
-
-
-    lostConnection := make(chan config.ElevatorState)
-    sendState := make(chan map[string][config.NumElevators]config.ElevatorState)
-    sendOrder := make(chan config.ElevatorOrder)
 
     networkChannels := config.NetworkChannels{
       PeerTxEnable: make(chan bool),
@@ -50,6 +44,17 @@ func main(){
       RecieveStateCh: make(chan map[string][config.NumElevators]config.ElevatorState),
     }
 
+    timerChannels := config.TimerChannels{
+      Open_door: make(chan bool),
+    }
+
+
+    orderChannels := config.OrderChannels{
+      LostConnection: make(chan config.ElevatorState),
+      SendState: make(chan map[string][config.NumElevators]config.ElevatorState),
+      SendOrder: make(chan config.ElevatorOrder),
+    }
+
     go peers.Transmitter(22349, idAsString, networkChannels.PeerTxEnable)
     go peers.Receiver(22349, networkChannels.PeerUpdateCh)
     go bcast.Transmitter(22367, networkChannels.TransmittOrderCh)
@@ -57,15 +62,15 @@ func main(){
     go bcast.Transmitter(22378, networkChannels.TransmittStateCh)
     go bcast.Receiver(22378, networkChannels.RecieveStateCh)
 
-    go elevio.PollButtons(fsmChannels.Drv_buttons)
-    go elevio.PollFloorSensor(fsmChannels.Drv_floors)
-    go elevio.PollStopButton(fsmChannels.Drv_stop)
+    go elevio.PollButtons(driverChannels.DrvButtons)
+    go elevio.PollFloorSensor(driverChannels.DrvFloors)
+    go elevio.PollStopButton(driverChannels.DrvStop)
 
-    go networkmod.RecieveData(id, networkChannels, &ElevatorList, &ActiveElevatorList, lostConnection)
-    go networkmod.SendData(networkChannels, sendOrder, sendState) 
+    go networkmod.RecieveData(id, networkChannels, orderChannels.LostConnection, &ElevatorList, &ActiveElevatorList)
+    go networkmod.SendData(networkChannels, orderChannels) 
 
-    go orderhandler.OrderHandler(fsmChannels.Drv_buttons, sendOrder, sendState,
-      networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, lostConnection, id, &ElevatorList, &ActiveElevatorList)
-    fsm.ElevStateMachine(fsmChannels, id, sendOrder, sendState, &ElevatorList, timerChannels, lostConnection)
+    go orderhandler.OrderHandler(driverChannels.DrvButtons, orderChannels.SendOrder, orderChannels.SendState,
+      networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, orderChannels.LostConnection, id, &ElevatorList, &ActiveElevatorList)
+    fsm.ElevStateMachine(driverChannels, id, orderChannels.SendOrder, orderChannels.SendState, &ElevatorList, timerChannels, orderChannels.LostConnection)
 
 }

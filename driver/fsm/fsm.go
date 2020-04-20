@@ -51,7 +51,7 @@ func setMotorDirection(dir config.Directions) {
 	}
 }
 
-func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
+func ElevStateMachine(ch config.DriverChannels, id int, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
   elevatorList *[config.NumElevators]config.ElevatorState, timerCh config.TimerChannels, lostConnection chan<- config.ElevatorState) {
 
   idAsString := strconv.Itoa(id)
@@ -70,7 +70,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
   //Stop elevator in the first floor that the elevators arrive in
   for {
     select{
-    case floor := <- ch.Drv_floors:
+    case floor := <- ch.DrvFloors:
       elevator.Floor = floor
       elevio.SetMotorDirection(elevio.MD_Stop)
       elevio.SetFloorIndicator(floor)
@@ -105,7 +105,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
 
     case config.Moving:
       select{
-      case floor := <- ch.Drv_floors:
+      case floor := <- ch.DrvFloors:
         ticker.Stop()
         ticker = time.NewTicker(5000 * time.Millisecond)
         elevio.SetFloorIndicator(floor)
