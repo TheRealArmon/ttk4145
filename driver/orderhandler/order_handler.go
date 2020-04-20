@@ -1,28 +1,29 @@
 package orderhandler
 
-import "../elevio"
-import "../config"
-import "strconv"
-import "fmt"
-//import "sync"
-//import "fmt"
 
-func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.ElevatorOrder, sendState chan<- map[string][config.NumElevators]config.ElevatorState,
-	recievedStateUpdate <-chan map[string][config.NumElevators]config.ElevatorState, recievedOrder <-chan config.ElevatorOrder,
-	lostConnection <-chan config.ElevatorState, id int, elevatorList *[config.NumElevators]config.ElevatorState, activeElevators *[config.NumElevators]bool,
+import (
+	cf "../config"
+ 	"../elevio"
+	"fmt"
+	"strconv"
+)
+
+func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- cf.ElevatorOrder, sendState chan<- map[string][cf.NumElevators]cf.ElevatorState,
+	recievedStateUpdate <-chan map[string][cf.NumElevators]cf.ElevatorState, recievedOrder <-chan cf.ElevatorOrder,
+	lostConnection <-chan cf.ElevatorState, id int, elevatorList *[cf.NumElevators]cf.ElevatorState, activeElevators *[cf.NumElevators]bool,
 	){
 		idIndex := id - 1
 		for{
 			select{
 			case pressedButton := <- buttonCh:
-				button_type := pressedButton.Button
-				order_floor := pressedButton.Floor
-				best_elevator := costCalculator(order_floor, button_type, elevatorList, activeElevators, id)
-				if best_elevator == id && checkIfOthersAreActive(activeElevators, idIndex){
-					elevatorList[idIndex].Queue[order_floor][button_type] = true
-					elevio.SetButtonLamp(button_type, order_floor, true)
+				button := pressedButton.Button
+				floor := pressedButton.Floor
+				bestElevator := costCalculator(floor, button, elevatorList, activeElevators, id)
+				if bestElevator == id && !checkIfOthersAreActive(activeElevators, idIndex){
+					elevatorList[idIndex].Queue[floor][button] = true
+					elevio.SetButtonLamp(button, floor, true)
 				}
-				sendOrder <- config.ElevatorOrder{button_type, order_floor, best_elevator, false}
+				sendOrder <- cf.ElevatorOrder{button, floor, bestElevator, false}
 
 			case newState := <- recievedStateUpdate:
 				for i, elevatorStateList := range newState{
@@ -35,7 +36,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 						go syncElev(idIndex, stateFromSender, elevatorList)
 						go turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue)
 					}
-					if elevatorStateList[senderIdAsInt-1].State == config.SystemFailure{
+					if elevatorStateList[senderIdAsInt-1].State == cf.SystemFailure{
 						activeElevators[senderIdAsInt-1] = false
 					}
 				}
@@ -49,7 +50,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 						elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
 					}
 					if newOrder.OrderStatus{
-						SwitchOffButtonLight(newOrder.Floor)
+						switchOffButtonLight(newOrder.Floor)
 					}
 			}
 			case lostElevator := <- lostConnection:
@@ -58,4 +59,3 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 			}
 		}
 	}
-

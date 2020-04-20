@@ -1,10 +1,12 @@
 package fsm 
 
-import "../elevio"
-import "../config"
-import "../orderhandler"
+import (
+	"../elevio"
+	cf "../config"
+	oh "../orderhandler"
+  )
 
-func initState(elevator *config.ElevatorState, DrvFloors chan int, id int) {
+func initState(elevator *cf.ElevatorState, DrvFloors chan int, id int) {
 	elevio.SetDoorOpenLamp(false)
 	elevio.SetMotorDirection(elevio.MD_Down)
 	  for {
@@ -14,8 +16,8 @@ func initState(elevator *config.ElevatorState, DrvFloors chan int, id int) {
 		elevio.SetFloorIndicator(floor)
 		elevator.Floor = floor
 		elevator.Id = id
-		for i := 0; i < config.NumFloors; i++ {
-		  for j := elevio.BT_HallUp; j < config.NumBtns; j++ {
+		for i := 0; i < cf.NumFloors; i++ {
+		  for j := elevio.BT_HallUp; j < cf.NumBtns; j++ {
 			elevio.SetButtonLamp(j, i, false)
 		  }
 		}
@@ -25,35 +27,119 @@ func initState(elevator *config.ElevatorState, DrvFloors chan int, id int) {
   }
 
 
-func reachedFloor(door_timer <-chan bool, elevatorStatus *config.ElevatorState) {
-	elevatorStatus.Dir = config.Stop
-	orderhandler.SwitchOffButtonLight(elevatorStatus.Floor)
+func reachedFloor(door_timer <-chan bool, elevatorStatus *cf.ElevatorState) {
+	oh.SwitchOffButtonLight(elevatorStatus.Floor)
 	elevio.SetMotorDirection(elevio.MD_Stop)
 	elevio.SetDoorOpenLamp(true)
+	elevatorStatus.Dir = cf.Stop
 	for {
 	  select{
 	  case <- door_timer:
 		elevio.SetDoorOpenLamp(false)
-		if orderhandler.CheckOrderSameFLoor(elevatorStatus){
-		  elevatorStatus.State = config.ArrivedAtFloor
+		if oh.CheckOrderSameFLoor(elevatorStatus){
+		  elevatorStatus.State = cf.ArrivedAtFloor
 		  return
 		}
-		elevatorStatus.Dir = orderhandler.FindDirection(elevatorStatus)
-		if (elevatorStatus.Dir == config.Stop){
-		  elevatorStatus.State = config.Idle
-		}else{elevatorStatus.State = config.Moving}
+		elevatorStatus.Dir = oh.FindDirection(elevatorStatus)
+		if (elevatorStatus.Dir == cf.Stop){
+		  elevatorStatus.State = cf.Idle
+		}else{elevatorStatus.State = cf.Moving}
 		setMotorDirection(elevatorStatus.Dir)
 		return
 	  }
 	}
   }
 
+func FindDirection(elevatorState *cf.ElevatorState) cf.Directions{
+	switch elevatorState.Dir {
+	case cf.Stop:
+		if checkOrdersAbove(elevatorState){
+			return cf.MovingUp
+		}
+		if checkOrdersBelow(elevatorState){
+			return cf.MovingDown
+		}else{return cf.Stop}
+	
+	case cf.MovingUp:
+		if checkOrdersAbove(elevatorState){
+			return cf.MovingUp
+			}
+		if checkOrdersBelow(elevatorState){
+			return cf.MovingDown
+		} else{return cf.Stop}
+	
+	case cf.MovingDown:
+		if checkOrdersBelow(elevatorState){
+			return cf.MovingDown
+		}
+		if checkOrdersAbove(elevatorState){
+			return cf.MovingUp
+		} else {return cf.Stop}
+	}
+	return cf.Stop
+}
 
-func setMotorDirection(dir config.Directions) {
-	if dir == config.MovingUp {
+func checkOrdersAbove(elevatorState *cf.ElevatorState) bool{
+	for floor := elevatorState.Floor + 1; floor < cf.NumFloors; floor++{
+		for button := 0; button < cf.NumBtns; button++{
+			if elevatorState.Queue[floor][button]{
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func checkOrdersBelow(elevatorState *cf.ElevatorState) bool{
+	for floor := elevatorState.Floor - 1; floor > -1; floor--{
+		for button := 0; button < cf.NumBtns; button++{
+			if elevatorState.Queue[floor][button]{
+				return true
+			}
+		}
+	}
+	return false
+}
+
+
+func CheckIfArrived(floor int, elevatorState *cf.ElevatorState) bool{
+	switch elevatorState.Dir {
+	case cf.MovingUp:
+		if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallUp] || !checkOrdersAbove(elevatorState){
+			return true
+		}
+	case cf.MovingDown:
+		if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallDown] || !checkOrdersBelow(elevatorState){
+			return true
+		}
+	}
+	return false
+}
+  
+  
+func CheckOrderSameFLoor(elevatorState *cf.ElevatorState) bool{
+	floor := elevatorState.Floor
+	if elevatorState.Queue[floor][elevio.BT_Cab] ||
+		elevatorState.Queue[floor][elevio.BT_HallUp] ||
+			elevatorState.Queue[floor][elevio.BT_HallDown]{
+			return true
+	}
+	return false
+}
+
+func ClearOrderQueue(floor int, elevatorState *cf.ElevatorState){
+	elevatorState.Queue[floor][elevio.BT_HallUp] = false
+	elevatorState.Queue[floor][elevio.BT_Cab] = false
+	elevatorState.Queue[floor][elevio.BT_HallDown] = false
+}
+
+  
+
+func setMotorDirection(dir cf.Directions) {
+	if dir == cf.MovingUp {
 		elevio.SetMotorDirection(elevio.MD_Up)
 	}
-	if dir == config.MovingDown {
+	if dir == cf.MovingDown {
 		elevio.SetMotorDirection(elevio.MD_Down)
 	}
 }

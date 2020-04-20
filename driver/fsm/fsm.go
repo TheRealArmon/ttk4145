@@ -47,9 +47,9 @@ func ElevStateMachine(ch cf.DriverChannels, id int, sendOrder chan<- cf.Elevator
       select{
       case floor := <- ch.DrvFloors:
         elevio.SetFloorIndicator(floor)
+        elevatorList[idIndex].Floor = floor
         ticker.Stop()
         ticker = time.NewTicker(5 * time.Second)
-        elevatorList[idIndex].Floor = floor
         if oh.CheckIfArrived(floor, &elevatorList[idIndex]){
           elevatorList[idIndex].State = cf.ArrivedAtFloor
         }
@@ -63,14 +63,16 @@ func ElevStateMachine(ch cf.DriverChannels, id int, sendOrder chan<- cf.Elevator
       }
 
     case cf.ArrivedAtFloor:
-      ticker.Stop()
+      //Send order letting the peers know that the order has been executed
       button := oh.FindOrderButton(elevatorList[idIndex].Floor, &elevatorList[idIndex])
       go func(){sendOrder <- cf.ElevatorOrder{button, elevatorList[idIndex].Floor, id, true}}()
+      
+      ticker.Stop()
       oh.ClearOrderQueue(elevatorList[idIndex].Floor, &elevatorList[idIndex])
       go timer.SetTimer(timerCh, cf.Door)
       reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
       if elevatorList[idIndex].State == cf.Moving{
-        ticker =  time.NewTicker(5000 * time.Millisecond)
+        ticker =  time.NewTicker(5 * time.Second)
       }
       go func(){sendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}}()
 

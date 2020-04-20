@@ -3,8 +3,8 @@ package main
 import (
   "./elevio"
   "./fsm"
-  "./config"
-  "./orderhandler"
+  cf "./config"
+  oh "./orderhandler"
   "./networkmod"
   "./networkmod/network/peers"
   "./networkmod/network/bcast"
@@ -17,42 +17,42 @@ func main(){
   var (
     localHostId        string
     id                 int
-    ElevatorList       [config.NumElevators]config.ElevatorState
-    ActiveElevatorList [config.NumElevators]bool
+    ElevatorList       [cf.NumElevators]cf.ElevatorState
+    ActiveElevatorList [cf.NumElevators]bool
   )
 
     flag.StringVar(&localHostId, "hostId", "", "hostId of this peer")
     flag.IntVar(&id, "id", 1234, "id of this peer")
     flag.Parse()
-    elevio.Init("localhost:"+localHostId, config.NumFloors)
+    elevio.Init("localhost:"+localHostId, cf.NumFloors)
 
     idAsString := strconv.Itoa(id)
 
 
-    driverChannels := config.DriverChannels{
+    driverChannels := cf.DriverChannels{
       DrvButtons: make(chan elevio.ButtonEvent),
       DrvFloors: make(chan int),
       DrvStop: make(chan bool),
     }
 
-    networkChannels := config.NetworkChannels{
+    networkChannels := cf.NetworkChannels{
       PeerTxEnable: make(chan bool),
       PeerUpdateCh: make(chan peers.PeerUpdate),
-      TransmittOrderCh: make(chan config.ElevatorOrder),
-      TransmittStateCh: make(chan map[string][config.NumElevators]config.ElevatorState),
-      RecieveOrderCh: make(chan config.ElevatorOrder),
-      RecieveStateCh: make(chan map[string][config.NumElevators]config.ElevatorState),
+      TransmittOrderCh: make(chan cf.ElevatorOrder),
+      TransmittStateCh: make(chan map[string][cf.NumElevators]cf.ElevatorState),
+      RecieveOrderCh: make(chan cf.ElevatorOrder),
+      RecieveStateCh: make(chan map[string][cf.NumElevators]cf.ElevatorState),
     }
 
-    timerChannels := config.TimerChannels{
+    timerChannels := cf.TimerChannels{
       Open_door: make(chan bool),
     }
 
 
-    orderChannels := config.OrderChannels{
-      LostConnection: make(chan config.ElevatorState),
-      SendState: make(chan map[string][config.NumElevators]config.ElevatorState),
-      SendOrder: make(chan config.ElevatorOrder),
+    orderChannels := cf.OrderChannels{
+      LostConnection: make(chan cf.ElevatorState),
+      SendState: make(chan map[string][cf.NumElevators]cf.ElevatorState),
+      SendOrder: make(chan cf.ElevatorOrder),
     }
 
     go peers.Transmitter(22349, idAsString, networkChannels.PeerTxEnable)
@@ -69,8 +69,10 @@ func main(){
     go networkmod.RecieveData(id, networkChannels, orderChannels.LostConnection, &ElevatorList, &ActiveElevatorList)
     go networkmod.SendData(networkChannels, orderChannels) 
 
-    go orderhandler.OrderHandler(driverChannels.DrvButtons, orderChannels.SendOrder, orderChannels.SendState,
-      networkChannels.RecieveStateCh, networkChannels.RecieveOrderCh, orderChannels.LostConnection, id, &ElevatorList, &ActiveElevatorList)
-    fsm.ElevStateMachine(driverChannels, id, orderChannels.SendOrder, orderChannels.SendState, &ElevatorList, timerChannels, orderChannels.LostConnection)
+    go oh.OrderHandler(driverChannels.DrvButtons, orderChannels.SendOrder, orderChannels.SendState, networkChannels.RecieveStateCh, 
+      networkChannels.RecieveOrderCh, orderChannels.LostConnection, id, &ElevatorList, &ActiveElevatorList)
+    
+    fsm.ElevStateMachine(driverChannels, id, orderChannels.SendOrder, orderChannels.SendState, &ElevatorList,
+         timerChannels, orderChannels.LostConnection)
 
 }
