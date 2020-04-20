@@ -6,6 +6,8 @@ import (
 	oh "../orderhandler"
   )
 
+//initilizes by moving down and stopping at first floor. It turns off all lights
+//and updates the state
 func initState(elevator *cf.ElevatorState, DrvFloors chan int, id int) {
 	elevio.SetDoorOpenLamp(false)
 	elevio.SetMotorDirection(elevio.MD_Down)
@@ -26,7 +28,8 @@ func initState(elevator *cf.ElevatorState, DrvFloors chan int, id int) {
 	}
   }
 
-
+//When reaching a floor the elevator stops and opens the door. After the door closes
+//it checks for new orders and update the state accordingly
 func reachedFloor(door_timer <-chan bool, elevatorStatus *cf.ElevatorState) {
 	oh.SwitchOffButtonLight(elevatorStatus.Floor)
 	elevio.SetMotorDirection(elevio.MD_Stop)

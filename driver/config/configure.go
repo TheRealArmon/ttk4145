@@ -30,12 +30,6 @@ const(
 )
 
 
-type TimerCase int
-
-const(
-  Door TimerCase = 0
-)
-
 type TimerChannels struct {
   Open_door     chan bool
 }

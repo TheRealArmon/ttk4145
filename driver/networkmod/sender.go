@@ -4,16 +4,14 @@ package networkmod
 import (
 	"time"
 	"../config"
-	"fmt"
 )
 
-//Sends data 10 times with a frequency of 20 per second
+//Sends data 10 times with a frequency of 66 per second
 func SendData(networkCh config.NetworkChannels, orderCh config.OrderChannels){
 	interval := 15 * time.Millisecond
 	for {
 		select{
 		case orderMsg := <- orderCh.SendOrder:
-			fmt.Println("sending", orderMsg)
 			for i := 0; i < 10; i++{
 				networkCh.TransmittOrderCh <- orderMsg
 				time.Sleep(interval)

@@ -14,6 +14,9 @@ import (
 
 func main(){
   
+  //The elevator list contains the state of each elevator on the network. The id corrasponds to the placement 
+  //in the elevator list, such that all the elevator can use the id of the one that sends the message to update 
+  //the elevator list in the right place.
   var (
     localHostId        string
     id                 int

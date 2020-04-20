@@ -46,7 +46,7 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
       case floor := <- driverCh.DrvFloors:
         elevio.SetFloorIndicator(floor)
         elevatorList[idIndex].Floor = floor
-        ticker.Stop()
+        ticker.Stop()                          //Resets the ticker each time it moves past a floor
         ticker = time.NewTicker(5 * time.Second)
         if checkIfArrived(floor, &elevatorList[idIndex]){
           elevatorList[idIndex].State = cf.ArrivedAtFloor
@@ -75,6 +75,7 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
       }
       go func(){orderCh.SendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}}()
 
+     //When the elevator starts moving again it stops at the first floor it arrives at
     case cf.SystemFailure:
       fmt.Println("System failure")
       select{
