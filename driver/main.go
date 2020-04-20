@@ -69,10 +69,9 @@ func main(){
     go networkmod.RecieveData(id, networkChannels, orderChannels.LostConnection, &ElevatorList, &ActiveElevatorList)
     go networkmod.SendData(networkChannels, orderChannels) 
 
-    go oh.OrderHandler(driverChannels.DrvButtons, orderChannels.SendOrder, orderChannels.SendState, networkChannels.RecieveStateCh, 
+    go oh.OrderHandler(driverChannels.DrvButtons, orderChannels, networkChannels.RecieveStateCh, 
       networkChannels.RecieveOrderCh, orderChannels.LostConnection, id, &ElevatorList, &ActiveElevatorList)
     
-    fsm.ElevStateMachine(driverChannels, id, orderChannels.SendOrder, orderChannels.SendState, &ElevatorList,
-         timerChannels, orderChannels.LostConnection)
+    fsm.ElevStateMachine(driverChannels, id, orderChannels, &ElevatorList, timerChannels)
 
 }

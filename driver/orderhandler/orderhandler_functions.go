@@ -50,7 +50,7 @@ func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[cf.
 
 //Making sure that the reconnecting elevator has the right state so that it can execute pre existing cab orders, as well as
 //turning on lights
-func syncElev(id int, tempElev cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState){
+func syncReconnectedElev(id int, tempElev cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState){
 	time.Sleep(3 * time.Second)
 	for floor := 0; floor < cf.NumFloors; floor++{
 		if tempElev.Queue[floor][elevio.BT_Cab]{
@@ -63,7 +63,7 @@ func syncElev(id int, tempElev cf.ElevatorState, elevatorList *[cf.NumElevators]
 
 //Transfers the hall orders of the lost elevator to the best suited elevator on the network
 func transferHallOrders(lostElevator cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState, activeElevators *[cf.NumElevators]bool,
-	sendOrder chan<- cf.ElevatorOrder, sendState chan<- map[string][cf.NumElevators]cf.ElevatorState, id int){
+	orderCh cf.OrderChannels, id int){
 		idAsString := strconv.Itoa(id)
 		lostElevatorIndex := lostElevator.Id-1
 		for floor := 0; floor < cf.NumFloors; floor++{
@@ -74,8 +74,8 @@ func transferHallOrders(lostElevator cf.ElevatorState, elevatorList *[cf.NumElev
 					if newExecutingElevator == id{
 						elevatorList[id-1].Queue[floor][button] = true
 					}
-					sendOrder <- cf.ElevatorOrder{button, floor, newExecutingElevator, false}
-					sendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}
+					go func(){orderCh.SendOrder <- cf.ElevatorOrder{button, floor, newExecutingElevator, false}}()
+					go func(){orderCh.SendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}}()
 				}
 			}
 		}
@@ -101,7 +101,7 @@ func transferHallOrders(lostElevator cf.ElevatorState, elevatorList *[cf.NumElev
 	 }
  }
 
- func switchOffButtonLight(floor int){
+ func SwitchOffButtonLight(floor int){
 	for button := elevio.BT_HallUp; button < cf.NumBtns; button++{
 	  elevio.SetButtonLamp(button, floor, false)
 	}

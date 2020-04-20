@@ -4,11 +4,10 @@ package orderhandler
 import (
 	cf "../config"
  	"../elevio"
-	"fmt"
 	"strconv"
 )
 
-func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- cf.ElevatorOrder, sendState chan<- map[string][cf.NumElevators]cf.ElevatorState,
+func OrderHandler(buttonCh <-chan elevio.ButtonEvent, orderCh cf.OrderChannels,
 	recievedStateUpdate <-chan map[string][cf.NumElevators]cf.ElevatorState, recievedOrder <-chan cf.ElevatorOrder,
 	lostConnection <-chan cf.ElevatorState, id int, elevatorList *[cf.NumElevators]cf.ElevatorState, activeElevators *[cf.NumElevators]bool,
 	){
@@ -23,7 +22,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- cf.Elevat
 					elevatorList[idIndex].Queue[floor][button] = true
 					elevio.SetButtonLamp(button, floor, true)
 				}
-				sendOrder <- cf.ElevatorOrder{button, floor, bestElevator, false}
+				go func(){orderCh.SendOrder <- cf.ElevatorOrder{button, floor, bestElevator, false}}()
 
 			case newState := <- recievedStateUpdate:
 				for i, elevatorStateList := range newState{
@@ -33,7 +32,7 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- cf.Elevat
 						activeElevators[senderIdAsInt-1] = true
 						stateFromSender := elevatorStateList[idIndex]
 						sendersElevatorQueue := elevatorStateList[senderIdAsInt-1].Queue
-						go syncElev(idIndex, stateFromSender, elevatorList)
+						go syncReconnectedElev(idIndex, stateFromSender, elevatorList)
 						go turnOnHallLightsWhenReconnectingToNetwork(sendersElevatorQueue)
 					}
 					if elevatorStateList[senderIdAsInt-1].State == cf.SystemFailure{
@@ -43,19 +42,17 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- cf.Elevat
 
 			case newOrder := <- recievedOrder:
 				executingElevator := newOrder.ExecutingElevator
-				fmt.Println(elevatorList[executingElevator-1])
-				if elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] != !(newOrder.OrderStatus){
-					elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
-					if (newOrder.Button != elevio.BT_Cab || executingElevator == id){
-						elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
-					}
-					if newOrder.OrderStatus{
-						switchOffButtonLight(newOrder.Floor)
-					}
-			}
+				elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
+				if (newOrder.Button != elevio.BT_Cab || executingElevator == id){
+					elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
+				}
+				if newOrder.OrderStatus{
+					SwitchOffButtonLight(newOrder.Floor)
+				}
+
 			case lostElevator := <- lostConnection:
 				activeElevators[lostElevator.Id-1] = false
-				go transferHallOrders(lostElevator, elevatorList, activeElevators, sendOrder, sendState, id)
+				go transferHallOrders(lostElevator, elevatorList, activeElevators, orderCh, id)
 			}
 		}
 	}
