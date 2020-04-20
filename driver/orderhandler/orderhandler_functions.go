@@ -74,8 +74,8 @@ func transferHallOrders(lostElevator cf.ElevatorState, elevatorList *[cf.NumElev
 					if newExecutingElevator == id{
 						elevatorList[id-1].Queue[floor][button] = true
 					}
-					go func(){orderCh.SendOrder <- cf.ElevatorOrder{button, floor, newExecutingElevator, false}}()
-					go func(){orderCh.SendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}}()
+					orderCh.SendOrder <- cf.ElevatorOrder{button, floor, newExecutingElevator, false}
+					orderCh.SendState <- map[string][cf.NumElevators]cf.ElevatorState{idAsString:*elevatorList}
 				}
 			}
 		}
