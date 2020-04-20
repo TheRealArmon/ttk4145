@@ -60,12 +60,10 @@ func CheckIfArrived(floor int, elevatorState *config.ElevatorState) bool{
   switch elevatorState.Dir {
   case config.MovingUp:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallUp] || !checkOrdersAbove(elevatorState){
-      ClearOrderQueue(floor, elevatorState)
       return true
     }
   case config.MovingDown:
     if elevatorState.Queue[floor][elevio.BT_Cab] || elevatorState.Queue[floor][elevio.BT_HallDown] || !checkOrdersBelow(elevatorState){
-      ClearOrderQueue(floor, elevatorState)
       return true
     }
   }
@@ -78,7 +76,6 @@ func CheckOrderSameFLoor(elevatorState *config.ElevatorState) bool{
   if elevatorState.Queue[floor][elevio.BT_Cab] ||
       elevatorState.Queue[floor][elevio.BT_HallUp] ||
         elevatorState.Queue[floor][elevio.BT_HallDown]{
-          ClearOrderQueue(floor, elevatorState)
           return true
   }
   return false
@@ -94,4 +91,13 @@ func SwitchOffButtonLight(floor int){
   for button := elevio.BT_HallUp; button < config.NumBtns; button++{
     elevio.SetButtonLamp(button, floor, false)
   }
+}
+
+func FindOrderButton(floor int, elevatorState *config.ElevatorState)elevio.ButtonType{
+  for button := elevio.BT_HallUp; button < config.NumBtns; button++{
+    if elevatorState.Queue[floor][button]{
+      return button
+    }
+  }
+  return elevio.BT_Cab
 }

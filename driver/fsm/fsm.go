@@ -80,7 +80,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
   }
 
   elevatorList[idIndex] = elevator
-  sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+  go func(){sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
   ticker := time.NewTicker(5000 * time.Millisecond)
   for {
     switch elevatorList[idIndex].ElevState {
@@ -100,7 +100,7 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
           elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
         if (elevatorList[idIndex].ElevState != config.Idle){
-          sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+          go func(){sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
         }
 
     case config.Moving:
@@ -113,25 +113,26 @@ func ElevStateMachine(ch config.FSMChannels, id int, sendOrder chan<- config.Ele
         if orderhandler.CheckIfArrived(floor, &elevatorList[idIndex]){
           elevatorList[idIndex].ElevState = config.ArrivedAtFloor
         }
-        sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+        go func(){sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
+      
       case <- ticker.C:
         ticker.Stop()
         elevatorList[idIndex].ElevState = config.SystemFailure
         lostConnection <- elevatorList[idIndex]
-        sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+        go func(){sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
       }
 
     case config.ArrivedAtFloor:
       ticker.Stop()
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallUp, elevatorList[idIndex].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_HallDown, elevatorList[idIndex].Floor, id, true}
-      sendOrder <- config.ElevatorOrder{elevio.BT_Cab, elevatorList[idIndex].Floor, id, true}
+      button := orderhandler.FindOrderButton(elevatorList[idIndex].Floor, &elevatorList[idIndex])
+      go func(){sendOrder <- config.ElevatorOrder{button, elevatorList[idIndex].Floor, id, true}}()
+      orderhandler.ClearOrderQueue(elevatorList[idIndex].Floor, &elevatorList[idIndex])
       go timer.SetTimer(timerCh, config.Door)
       reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
       if elevatorList[idIndex].ElevState == config.Moving{
         ticker =  time.NewTicker(5000 * time.Millisecond)
       }
-      sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}
+      go func(){sendState <- map[string][config.NumElevators]config.ElevatorState{idAsString:*elevatorList}}()
 
     case config.SystemFailure:
       

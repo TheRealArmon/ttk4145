@@ -3,7 +3,7 @@ package orderhandler
 import "../elevio"
 import "../config"
 import "strconv"
-//import "fmt"
+import "fmt"
 //import "sync"
 //import "fmt"
 
@@ -42,11 +42,16 @@ func OrderHandler(buttonCh <-chan elevio.ButtonEvent, sendOrder chan<- config.El
 
 			case newOrder := <- recievedOrder:
 				executingElevator := newOrder.ExecutingElevator
-				elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
-				if (newOrder.Button != elevio.BT_Cab || executingElevator == id){
-					elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
-				}
-
+				fmt.Println(elevatorList[executingElevator-1])
+				if elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] != !(newOrder.OrderStatus){
+					elevatorList[executingElevator-1].Queue[newOrder.Floor][newOrder.Button] = !(newOrder.OrderStatus)
+					if (newOrder.Button != elevio.BT_Cab || executingElevator == id){
+						elevio.SetButtonLamp(newOrder.Button, newOrder.Floor, !(newOrder.OrderStatus))
+					}
+					if newOrder.OrderStatus{
+						SwitchOffButtonLight(newOrder.Floor)
+					}
+			}
 			case lostElevator := <- lostConnection:
 				activeElevators[lostElevator.Id-1] = false
 				go transferHallOrders(lostElevator, elevatorList, activeElevators, sendOrder, sendState, id)

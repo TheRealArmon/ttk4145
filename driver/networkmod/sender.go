@@ -2,14 +2,14 @@ package networkmod
 
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 	"../config"
 )
 
 //Sends data 10 times with a frequency of 20 per second
 func SendData(ch config.NetworkChannels, newOrder <-chan config.ElevatorOrder, newState <-chan map[string][config.NumElevators]config.ElevatorState) {
-	interval = 50 * time.Millisecond
+	interval := 15 * time.Millisecond
 	for {
 		select{
 		case orderMsg := <- newOrder:
