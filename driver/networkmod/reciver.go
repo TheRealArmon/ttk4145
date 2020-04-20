@@ -7,7 +7,7 @@ import (
 	cf "../config"
 )
 
-func RecieveData(id int, ch cf.NetworkChannels, lostConnection chan<- cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState, 
+func UpdatePeers(id int, ch cf.NetworkChannels, lostConnection chan<- cf.ElevatorState, elevatorList *[cf.NumElevators]cf.ElevatorState, 
 	activeElevators *[cf.NumElevators]bool) {
 	
 	idAsString := strconv.Itoa(id)

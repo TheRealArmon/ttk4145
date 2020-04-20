@@ -66,7 +66,7 @@ func main(){
     go elevio.PollFloorSensor(driverChannels.DrvFloors)
     go elevio.PollStopButton(driverChannels.DrvStop)
 
-    go networkmod.RecieveData(id, networkChannels, orderChannels.LostConnection, &ElevatorList, &ActiveElevatorList)
+    go networkmod.UpdatePeers(id, networkChannels, orderChannels.LostConnection, &ElevatorList, &ActiveElevatorList)
     go networkmod.SendData(networkChannels, orderChannels) 
 
     go oh.OrderHandler(driverChannels.DrvButtons, orderChannels, networkChannels.RecieveStateCh, 

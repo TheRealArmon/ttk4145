@@ -3,7 +3,6 @@ package fsm
 import (
   "../elevio"
   cf "../config"
-  "../timer"
   "strconv"
   "time"
   "fmt"
@@ -68,7 +67,7 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
       
       ticker.Stop()
       clearOrderQueue(elevatorList[idIndex].Floor, &elevatorList[idIndex])
-      go timer.SetTimer(timerCh, cf.Door)
+      go func(){time.Sleep(3 * time.Second); timerCh.Open_door <- true}()
       reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
       if elevatorList[idIndex].State == cf.Moving{
         ticker =  time.NewTicker(5 * time.Second)
@@ -80,7 +79,7 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
       select{
       case floor := <- driverCh.DrvFloors:
         elevatorList[idIndex].Floor = floor
-        go timer.SetTimer(timerCh, cf.Door)
+        go func(){time.Sleep(3 * time.Second); timerCh.Open_door <- true}()
         reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
       }
     }
