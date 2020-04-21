@@ -6,6 +6,7 @@ import (
  	"../elevio"
 	"time"
 	"strconv"
+	"fmt"
 )
 
 func costCalculator(floor int, button_type elevio.ButtonType, elevatorList *[cf.NumElevators]cf.ElevatorState,

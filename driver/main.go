@@ -75,6 +75,6 @@ func main(){
     go oh.OrderHandler(driverChannels.DrvButtons, orderChannels, networkChannels.RecieveStateCh, 
       networkChannels.RecieveOrderCh, orderChannels.LostConnection, id, &ElevatorList, &ActiveElevatorList)
     
-    fsm.ElevStateMachine(driverChannels, id, orderChannels, &ElevatorList, timerChannels)
+    fsm.ElevStateMachine(driverChannels, id, orderChannels, &ElevatorList, timerChannels, &ActiveElevatorList)
 
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChannels,
-    elevatorList *[cf.NumElevators]cf.ElevatorState, timerCh cf.TimerChannels) {
+    elevatorList *[cf.NumElevators]cf.ElevatorState, timerCh cf.TimerChannels, activeElevators *[cf.NumElevators]bool) {
 
   idAsString := strconv.Itoa(id)
   idIndex := id - 1 //Each elevator's place in the elevator list corresponds to their id - 1
@@ -80,6 +80,8 @@ func ElevStateMachine(driverCh cf.DriverChannels, id int, orderCh cf.OrderChanne
       fmt.Println("System failure")
       select{
       case floor := <- driverCh.DrvFloors:
+        fmt.Println(elevatorList[idIndex].Queue)
+        activeElevators[idIndex] = true
         elevatorList[idIndex].Floor = floor
         go func(){time.Sleep(3 * time.Second); timerCh.Open_door <- true}()
         reachedFloor(timerCh.Open_door, &elevatorList[idIndex])
